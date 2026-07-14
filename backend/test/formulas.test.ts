@@ -46,6 +46,7 @@ describe('§5.2 TDEE adaptativo', () => {
       weighinsCount: 19, // ≥10 pesajes
       emaFirst: 83.0,
       emaLast: 82.4, // ΔEMA = −0.6
+      trendCoversWindow: true,
       mifflin,
     });
     expect(res.status).toBe('adaptive');
@@ -59,6 +60,7 @@ describe('§5.2 TDEE adaptativo', () => {
       weighinsCount: 19,
       emaFirst: 83.0,
       emaLast: 82.4,
+      trendCoversWindow: true,
       mifflin,
     });
     expect(res.status).toBe('calibrating');
@@ -76,9 +78,26 @@ describe('§5.2 TDEE adaptativo', () => {
       weighinsCount: 9, // <10 pesajes
       emaFirst: 83.0,
       emaLast: 82.4,
+      trendCoversWindow: true,
       mifflin,
     });
     expect(res.status).toBe('calibrating');
+  });
+
+  it('trend NO cubre la ventana (onboarding) → calibrating, NO TDEE corrupto', () => {
+    // Regresión del bug emaFirst=0: aunque haya ≥10 complete y ≥10 pesajes, si el
+    // trend no cubre la ventana no se computa ΔEMA → Mifflin, nunca un balance absurdo.
+    const res = adaptiveTdee({
+      windowDays: 21,
+      completeDayKcals: Array(16).fill(2500),
+      weighinsCount: 19,
+      emaFirst: 0, // valor centinela que ANTES corrompía el cálculo
+      emaLast: 82.4,
+      trendCoversWindow: false,
+      mifflin,
+    });
+    expect(res.status).toBe('calibrating');
+    expect(res.kcal).toBeCloseTo(2747.8, 1); // Mifflin, no un número negativo/absurdo
   });
 });
 
@@ -98,7 +117,7 @@ describe('§5.3 e1RM', () => {
 });
 
 describe('§5.4 Sugerencia de peso (doble progresión)', () => {
-  const presc = { repRange: [6, 8] as [number, number], targetRir: 2 };
+  const presc = { repRange: [6, 8] as [number, number], targetRir: 2, sets: 4 };
 
   it('4×80×8@2 → 82.5 (increase)', () => {
     const sets = [1, 2, 3, 4].map((n) => ({ set_number: n, weight_kg: 80, reps: 8, rir: 2 }));
@@ -119,6 +138,16 @@ describe('§5.4 Sugerencia de peso (doble progresión)', () => {
     expect(res.suggestion_reason).toBe('repeat_weight');
   });
 
+  it('menos sets de los prescritos (2 de 4, ambos al tope) → repeat, NO increase', () => {
+    const sets = [
+      { set_number: 1, weight_kg: 80, reps: 8, rir: 2 },
+      { set_number: 2, weight_kg: 80, reps: 8, rir: 2 },
+    ];
+    const res = suggestWeight(presc, sets, 2.5); // presc.sets = 4
+    expect(res.suggested_weight_kg).toBeCloseTo(80, 2);
+    expect(res.suggestion_reason).toBe('repeat_weight');
+  });
+
   it('sin historia → null', () => {
     const res = suggestWeight(presc, [], 2.5);
     expect(res.suggested_weight_kg).toBeNull();
@@ -130,7 +159,8 @@ describe('§5.4 Sugerencia de peso (doble progresión)', () => {
       { set_number: 1, weight_kg: 82.5, reps: 8, rir: 2 },
       { set_number: 2, weight_kg: 80, reps: 8, rir: 2 }, // último → base 80
     ];
-    const res = suggestWeight(presc, sets, 2.5);
+    // prescritos 2, se cumplen los 2 → increase sobre el último peso (80).
+    const res = suggestWeight({ repRange: [6, 8], targetRir: 2, sets: 2 }, sets, 2.5);
     expect(res.suggested_weight_kg).toBeCloseTo(82.5, 2); // 80 + 2.5
   });
 });

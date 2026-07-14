@@ -28,7 +28,8 @@ export interface SummaryToday {
   logging_complete: boolean;
 }
 export interface EnergyStatus {
-  tdee: { kcal: number | null; status: string; window_days: number; complete_days_used: number; weighins_used: number };
+  as_of_date: string | null; // ancla de la ventana (último pesaje); evita presentar data vieja como actual
+  tdee: { kcal: number | null; status: string; window_days: number; complete_days_used: number; weighins_used: number; incomplete_days_excluded: number };
   weight: { trend_kg: number | null; trend_series: { date: string; ema_kg: number }[]; delta_window_kg: number | null };
   intake: { avg_kcal_complete_days: number | null; adherence_pct: number | null };
   goal: { rate_target_kg_per_week: number | null; rate_actual_kg_per_week: number | null; on_track: boolean };
@@ -124,11 +125,14 @@ interface EnergyCore {
   deltaWindow: number | null;
   completeDayKcals: number[];
   completeDaysUsed: number;
+  incompleteDaysExcluded: number; // días marcados complete pero con 0 meals o kcal < MIN
   weighinsUsed: number;
   avgKcal: number | null;
   tdeeKcal: number | null;
   status: 'adaptive' | 'calibrating';
 }
+
+const MIN_COMPLETE_KCAL = 500; // un día "complete" por debajo de esto es sospechoso → se excluye del TDEE
 
 async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> {
   const goals = await getGoals(env);
@@ -141,22 +145,32 @@ async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> 
   if (!refDate) {
     return {
       refDate: null, series, windowSeries: [], trendKg: null, emaFirst: null, emaLast: null,
-      deltaWindow: null, completeDayKcals: [], completeDaysUsed: 0, weighinsUsed: 0, avgKcal: null,
-      tdeeKcal: null, status: 'calibrating',
+      deltaWindow: null, completeDayKcals: [], completeDaysUsed: 0, incompleteDaysExcluded: 0,
+      weighinsUsed: 0, avgKcal: null, tdeeKcal: null, status: 'calibrating',
     };
   }
 
   const windowStart = addDays(refDate, -(WINDOW_DAYS - 1));
   const windowSeries = series.filter((p) => p.date >= windowStart && p.date <= refDate);
   const trendKg = emaAt(series, refDate);
+  // emaFirst = EMA en windowStart (carry-forward). null si el trend NO cubre la ventana
+  // (primer pesaje posterior a windowStart) → NO es un ΔEMA fiable → calibrating.
   const emaFirst = emaAt(series, windowStart);
   const emaLast = trendKg;
+  const trendCoversWindow = emaFirst != null;
   const deltaWindow = emaFirst != null && emaLast != null ? round1(emaLast - emaFirst) : null;
 
-  // Días complete en ventana → kcal por día.
+  // Días complete en ventana → kcal por día. Excluir días marcados complete pero
+  // con 0 meals o kcal < MIN (mal marcados): arrastrarían el promedio del TDEE hacia abajo.
   const completeDates = await completeDaysInRange(env, windowStart, refDate);
   const kcalByDate = await mealKcalByDate(env, windowStart, refDate);
-  const completeDayKcals = completeDates.map((d) => kcalByDate.get(d) ?? 0);
+  const completeDayKcals: number[] = [];
+  let incompleteDaysExcluded = 0;
+  for (const d of completeDates) {
+    const k = kcalByDate.get(d);
+    if (k == null || k < MIN_COMPLETE_KCAL) incompleteDaysExcluded++;
+    else completeDayKcals.push(k);
+  }
   const weighinsUsed = await weighinDaysInRange(env, windowStart, refDate);
   const avgKcal = completeDayKcals.length ? round1(completeDayKcals.reduce((a, b) => a + b, 0) / completeDayKcals.length) : null;
 
@@ -174,8 +188,9 @@ async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> 
     windowDays: WINDOW_DAYS,
     completeDayKcals,
     weighinsCount: weighinsUsed,
-    emaFirst: emaFirst ?? 0,
+    emaFirst: emaFirst ?? 0, // solo se usa si trendCoversWindow (garantiza no-null)
     emaLast: emaLast ?? 0,
+    trendCoversWindow,
     mifflin,
   });
 
@@ -184,8 +199,8 @@ async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> 
 
   return {
     refDate, series, windowSeries, trendKg, emaFirst, emaLast, deltaWindow,
-    completeDayKcals, completeDaysUsed: completeDayKcals.length, weighinsUsed, avgKcal,
-    tdeeKcal, status: tdee.status,
+    completeDayKcals, completeDaysUsed: completeDayKcals.length, incompleteDaysExcluded,
+    weighinsUsed, avgKcal, tdeeKcal, status: tdee.status,
   };
 }
 
@@ -203,12 +218,14 @@ export async function energyStatus(env: Env): Promise<EnergyStatus> {
   const adherence = round1(core.completeDaysUsed / WINDOW_DAYS);
 
   return {
+    as_of_date: core.refDate,
     tdee: {
       kcal: core.tdeeKcal,
       status: core.status,
       window_days: WINDOW_DAYS,
       complete_days_used: core.completeDaysUsed,
       weighins_used: core.weighinsUsed,
+      incomplete_days_excluded: core.incompleteDaysExcluded,
     },
     weight: {
       trend_kg: core.trendKg != null ? round1(core.trendKg) : null,
@@ -440,7 +457,7 @@ export async function nextSession(env: Env, date: string): Promise<NextSession> 
     const lastSets = await lastWorkingSets(env, pex.exercise_id, date);
     const increment = cat?.increment_kg ?? 2.5;
     const suggestion = suggestWeight(
-      { repRange: pex.rep_range, targetRir: pex.target_rir },
+      { repRange: pex.rep_range, targetRir: pex.target_rir, sets: pex.sets },
       lastSets.map((s) => ({ set_number: s.set_number, weight_kg: s.weight_kg, reps: s.reps, rir: s.rir })),
       increment,
     );

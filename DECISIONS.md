@@ -2,6 +2,20 @@
 
 Registro de decisiones de implementación no cubiertas por las specs y desviaciones justificadas del contrato. El agente de iOS depende de este archivo y de `specs/01-contracts.md`.
 
+## Estructura del repo
+
+- **Todo el código del backend vive en `backend/`** (`backend/src`, `backend/migrations`, `backend/test`, `backend/wrangler.jsonc`, `backend/COACH.md`), como exigen `specs/00-overview.md` y B1. La raíz del repo es el proyecto `cbum/` y contiene `PLAN.md`, `design-brief.md`, `DECISIONS.md`, `specs/` y `backend/` (y `ios/` del Agente B). Ejecuta los comandos de wrangler/npm desde `backend/`.
+
+## Correcciones post-review
+
+- **TDEE en onboarding (bloqueante corregido):** el balance energético solo se computa si el trend de peso (EMA) **cubre toda la ventana de 21 días** (hay EMA en `windowStart`). Si el primer pesaje es posterior a `windowStart` (primeras ~3 semanas), `adaptiveTdee` recibe `trendCoversWindow=false` y cae a `calibrating`/Mifflin. Esto evita el bug de `emaFirst=0` que producía ΔEMA≈peso y un TDEE absurdo presentado como fiable. Coherente con "primeras 2 semanas = provisional" del PLAN.
+- **Días `logging_complete` sin comida:** un día marcado complete con 0 meals o `kcal < 500` se **excluye** del promedio de ingesta del TDEE (arrastraría el TDEE hacia abajo). Se reporta en `energy-status.tdee.incomplete_days_excluded`. `complete_days_used` refleja los días realmente usados (post-exclusión) y alimenta el gate de ≥10 días.
+- **Sugerencia de peso (§5.4):** además de que todos los sets cumplan reps/RIR, se exige que la última sesión haya hecho **al menos tantos sets de trabajo como los prescritos** (`lastSessionSets.length ≥ prescription.sets`); si hizo menos, se repite peso (no se sube).
+- **Reconciliación de sets en `POST /api/workouts`:** el array `sets` del payload es autoritativo; los sets del workout ausentes se **soft-borran** (`deleted=1`) para reflejar ediciones que quitan un set. Cambio anotado en `specs/01-contracts.md §3`. iOS re-postea el workout completo; no hay `DELETE /api/sets/:id`.
+- **`energy-status.as_of_date`:** fecha ancla de la ventana (último pesaje). Evita presentar data vieja como actual si el usuario deja de pesarse. Campo nuevo (aditivo, no rompe iOS).
+- **Auth bearer:** comparación en tiempo constante (evita timing side-channel).
+- **Endpoint `GET /api/debug/resolve` eliminado** (era solo verificación de B3). `resolve_food` se ejerce vía el tool MCP.
+
 ## Stack y arquitectura
 
 - **Router:** Hono sobre Cloudflare Workers, TypeScript estricto.
@@ -27,7 +41,6 @@ Registro de decisiones de implementación no cubiertas por las specs y desviacio
 - **`next-session` "última sesión":** workout más reciente con `date < date_objetivo` que incluya el ejercicio con set de trabajo. `top_set` = set de trabajo más pesado de esa sesión.
 - **`progress.prs_recent`:** PRs detectados recorriendo cada ejercicio en orden cronológico (e1rm válido > máximo previo); se devuelven los 10 más recientes.
 - **Cache de alimentos:** TTL 30 días (contracts/B3); key de query = `q:{djb2(query)}:{page_size}`. Ranking USDA por `dataType` (Foundation < SR Legacy < Branded) preservando el orden de relevancia dentro de cada tipo.
-- **Endpoint `GET /api/debug/resolve`:** util de verificación de `resolve_food` (bajo auth). No forma parte del contrato iOS; se puede quitar.
 
 ## Fechas
 
@@ -42,6 +55,8 @@ Registro de decisiones de implementación no cubiertas por las specs y desviacio
 ## Secrets a configurar (antes de `wrangler deploy`)
 
 ```sh
+cd backend   # todos los comandos de wrangler se ejecutan desde backend/
+
 # 1. Crear la base D1 y copiar el database_id impreso a wrangler.jsonc
 wrangler d1 create cbum-db
 

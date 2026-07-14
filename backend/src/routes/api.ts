@@ -21,7 +21,6 @@ import * as programSvc from '../services/program';
 import { getChanges } from '../services/changes';
 import { exportAll } from '../services/export';
 import * as analytics from '../services/analytics';
-import { resolveFood } from '../services/food';
 
 function requireQuery(value: string | undefined, name: string): string {
   if (!value) throw badRequest('missing_param', `parámetro requerido: ${name}`);
@@ -157,12 +156,4 @@ export function registerApiRoutes(api: Hono<AppBindings>): void {
   });
 
   api.get('/export', async (c) => c.json(await exportAll(c.env)));
-
-  // ── Debug (verificación B3; también útil para la app) ──────────────────────
-  api.get('/debug/resolve', async (c) => {
-    const query = c.req.query('query');
-    const barcode = c.req.query('barcode');
-    const pageSize = c.req.query('page_size') ? Number(c.req.query('page_size')) : undefined;
-    return c.json(await resolveFood(c.env, { query, barcode, page_size: pageSize }));
-  });
 }

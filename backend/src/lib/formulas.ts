@@ -70,8 +70,11 @@ export interface AdaptiveTdeeInput {
   windowDays: number; // 21
   completeDayKcals: number[]; // kcal de días logging_complete dentro de la ventana
   weighinsCount: number; // pesajes dentro de la ventana
-  emaFirst: number; // ema del primer día de la ventana
+  emaFirst: number; // ema del primer día de la ventana (solo se usa si trendCoversWindow)
   emaLast: number; // ema del último día de la ventana
+  // El trend de peso cubre TODA la ventana (hay EMA en windowStart). Si es false,
+  // ΔEMA no es fiable (onboarding) → calibrating. Evita el bug de emaFirst=0.
+  trendCoversWindow: boolean;
   mifflin: MifflinInput; // para el fallback calibrating
 }
 export interface AdaptiveTdeeResult {
@@ -82,10 +85,10 @@ export interface AdaptiveTdeeResult {
   weighins_used: number;
 }
 
-// adaptive si ≥10 días complete Y ≥10 pesajes en la ventana; si no, calibrating (Mifflin).
+// adaptive si ≥10 días complete Y ≥10 pesajes Y el trend cubre la ventana; si no, calibrating (Mifflin).
 export function adaptiveTdee(i: AdaptiveTdeeInput): AdaptiveTdeeResult {
   const completeDays = i.completeDayKcals.length;
-  const isAdaptive = completeDays >= 10 && i.weighinsCount >= 10;
+  const isAdaptive = completeDays >= 10 && i.weighinsCount >= 10 && i.trendCoversWindow;
 
   let kcal: number;
   if (isAdaptive) {
@@ -123,6 +126,7 @@ export function computeE1rm(
 export interface Prescription {
   repRange: [number, number]; // [min,max]
   targetRir: number;
+  sets: number; // sets prescritos; se exige que la última sesión los haya cumplido todos
 }
 export interface WorkingSet {
   set_number: number;
@@ -153,7 +157,10 @@ export function suggestWeight(
   const lastSet = lastSessionSets.reduce((a, b) => (b.set_number >= a.set_number ? b : a));
   const lastWeight = lastSet.weight_kg;
 
-  const allHit = lastSessionSets.every((s) => s.reps >= max && s.rir >= prescription.targetRir);
+  // §5.4: TODOS los sets prescritos deben haber cumplido. Si la última sesión hizo
+  // menos sets de los prescritos, NO se sube (aunque los hechos llegaran al tope).
+  const enoughSets = lastSessionSets.length >= prescription.sets;
+  const allHit = enoughSets && lastSessionSets.every((s) => s.reps >= max && s.rir >= prescription.targetRir);
   if (allHit) {
     return {
       suggested_weight_kg: round1(lastWeight + incrementKg),

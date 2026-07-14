@@ -75,6 +75,19 @@ export async function upsertWorkout(env: Env, w: WorkoutInput): Promise<WorkoutR
       );
     }),
   ];
+
+  // Reconciliación: soft-delete de sets del workout AUSENTES del payload (edición que quita un set).
+  // Los sets del payload se acaban de marcar deleted=0, así que el NOT IN no los toca.
+  if (w.sets.length > 0) {
+    const ph = w.sets.map(() => '?').join(',');
+    stmts.push(
+      env.DB.prepare(`UPDATE sets SET deleted=1, updated_at=? WHERE workout_id=? AND deleted=0 AND id NOT IN (${ph})`).bind(
+        ts, w.id, ...w.sets.map((s) => s.id),
+      ),
+    );
+  } else {
+    stmts.push(env.DB.prepare(`UPDATE sets SET deleted=1, updated_at=? WHERE workout_id=? AND deleted=0`).bind(ts, w.id));
+  }
   await env.DB.batch(stmts);
 
   const result = await getWorkoutById(env, w.id);
