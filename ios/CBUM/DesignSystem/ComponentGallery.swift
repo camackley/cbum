@@ -11,6 +11,7 @@ struct ComponentGallery: View {
     @State private var slReps = 8
     @State private var slRir: Int? = nil
     @State private var rest = 92
+    @State private var range: ChartRange = .m3
 
     var body: some View {
         ScrollView {
@@ -86,6 +87,38 @@ struct ComponentGallery: View {
                 section("Extra · PR toast") {
                     PRToast(exercise: "Press banca", detail: "e1RM 113.3 kg · +2.5 vs anterior", onDismiss: {})
                 }
+
+                // ── V2 (I5/I6) ──────────────────────────────────────────────
+                section("V2 · Selector de rango (charts)") {
+                    CBRangePicker(selection: $range)
+                }
+                section("V2 · Tríada de HOY + chip de recuperación") {
+                    TodayTriad(
+                        eat: .init(kcalConsumed: 1830, kcalTarget: 2650),
+                        train: .init(name: "Upper A", isRest: false, completed: false, exerciseCount: 6),
+                        sleep: .init(hours: 6.95, deep: 1.2, rem: 1.55, core: 4.2),
+                        recoveryState: "caution")
+                }
+                section("V2 · Chips de recuperación (todos los estados)") {
+                    RecoveryChip(state: "good")
+                    RecoveryChip(state: "caution")
+                    RecoveryChip(state: "low")
+                    RecoveryChip(state: "no_data")
+                }
+                section("V2 · Sueño apilado por fases + necesidad") {
+                    SleepStackedBars(nights: sampleNights, needHours: 7.0, avg7d: 7.1, midpointDrift: 0.6)
+                }
+                section("V2 · Banda de baseline (RHR con punto fuera)") {
+                    BaselineBandChart(points: sampleRHR, baseline: 58, bandLow: 58 * 0.97, bandHigh: 58 * 1.03,
+                                      yUnit: "bpm", chartId: "gallery.rhr", decimals: 0)
+                }
+                section("V2 · Composición (recomposición)") {
+                    CompositionChart(bodyFat: sampleFat, leanMass: sampleLean, chartId: "gallery.comp")
+                }
+                section("V2 · TrendChart con rango + scrubbing") {
+                    TrendChart(data: sampleWeight, rawReadings: sampleWeightRaw, yUnit: "kg",
+                               chartId: "gallery.weight", decimals: 1)
+                }
             }
             .padding(CBSpace.gutterScreen)
         }
@@ -99,6 +132,51 @@ struct ComponentGallery: View {
             let day: TimeInterval = Double(i) * 345_600            // 4 días
             let value: Double = 100.0 + Double(i) * 1.3
             return TrendPoint(date: start.addingTimeInterval(day), value: value, isPR: i == 4 || i == 9)
+        }
+    }
+
+    // Datos de ejemplo V2
+    private var sampleNights: [SleepNight] {
+        let start = Calendar.bogota.date(byAdding: .day, value: -18, to: Date()) ?? Date()
+        return (0..<18).compactMap { i in
+            if i == 7 || i == 8 { return nil }   // hueco real
+            let d = Calendar.bogota.date(byAdding: .day, value: i, to: start) ?? Date()
+            let w = Double((i * 13) % 7 - 3) / 20.0
+            return SleepNight(date: d, deep: 1.05 + w * 0.5, rem: 1.45 + w, core: 4.35 - w * 0.5, awake: 0.55)
+        }
+    }
+    private var sampleRHR: [TrendPoint] {
+        let start = Calendar.bogota.date(byAdding: .day, value: -28, to: Date()) ?? Date()
+        return (0..<28).compactMap { i in
+            if (20...23).contains(i) { return nil }
+            let d = Calendar.bogota.date(byAdding: .day, value: i, to: start) ?? Date()
+            return TrendPoint(date: d, value: i == 27 ? 61 : 58)
+        }
+    }
+    private var sampleFat: [TrendPoint] {
+        let start = Calendar.bogota.date(byAdding: .day, value: -84, to: Date()) ?? Date()
+        return (0..<12).map { i in
+            let d = Calendar.bogota.date(byAdding: .day, value: i * 7, to: start) ?? Date()
+            return TrendPoint(date: d, value: 16.8 - Double(i) * 0.12)
+        }
+    }
+    private var sampleLean: [TrendPoint] {
+        let start = Calendar.bogota.date(byAdding: .day, value: -84, to: Date()) ?? Date()
+        return (0..<12).map { i in
+            let d = Calendar.bogota.date(byAdding: .day, value: i * 7, to: start) ?? Date()
+            return TrendPoint(date: d, value: 68.5 + Double(i) * 0.18)
+        }
+    }
+    private var sampleWeight: [TrendPoint] {
+        let start = Calendar.bogota.date(byAdding: .day, value: -120, to: Date()) ?? Date()
+        return (0..<120).map { i in
+            let d = Calendar.bogota.date(byAdding: .day, value: i, to: start) ?? Date()
+            return TrendPoint(date: d, value: 84.0 - Double(i) * 0.03)
+        }
+    }
+    private var sampleWeightRaw: [TrendPoint] {
+        sampleWeight.enumerated().filter { $0.offset % 3 == 0 }.map {
+            TrendPoint(date: $0.element.date, value: $0.element.value + Double(($0.offset % 5) - 2) * 0.2)
         }
     }
 

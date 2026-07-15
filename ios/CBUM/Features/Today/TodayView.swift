@@ -13,7 +13,8 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: CBSpace.s5) {
                     Color.clear.frame(height: 0).id("cb.today.top")
                     if let vm, let s = vm.summary {
-                        macrosSection(s)
+                        triadaSection(vm, s)
+                        precisionBar(s.precision)
                         statsSection(s)
                         sessionSection(s)
                         dayCompleteToggle(vm, s)
@@ -43,26 +44,29 @@ struct TodayView: View {
         }
     }
 
-    // MARK: Macros + precisión
-    private func macrosSection(_ s: SummaryToday) -> some View {
-        VStack(spacing: CBSpace.s3) {
-            MacroRings(
-                kcal: .init(consumed: s.intake.kcal, target: s.targets.kcal),
-                protein: .init(consumed: s.intake.protein_g, target: s.targets.protein_g),
-                carbs: .init(consumed: s.intake.carbs_g, target: s.targets.carbs_g),
-                fat: .init(consumed: s.intake.fat_g, target: s.targets.fat_g))
-            .frame(maxWidth: .infinity)
-
-            precisionBar(s.precision)
+    // MARK: HOY = tríada (I5 §2) — COMER · ENTRENAR · DORMIR + chip de recuperación.
+    private func triadaSection(_ vm: TodayViewModel, _ s: SummaryToday) -> some View {
+        let sleep = vm.recovery?.sleep
+        let train: TodayTriad.Train? = s.session.map {
+            .init(name: $0.name, isRest: $0.program_day_id == "rest",
+                  completed: $0.completed_today, exerciseCount: $0.exercise_count)
         }
+        return TodayTriad(
+            eat: .init(kcalConsumed: s.intake.kcal, kcalTarget: s.targets.kcal),
+            train: train,
+            sleep: .init(hours: sleep?.hours ?? s.recovery?.sleep_hours,
+                         deep: sleep?.deep_hours, rem: sleep?.rem_hours, core: sleep?.core_hours),
+            recoveryState: vm.recoveryState,
+            onEat: { router.tab = .nutricion },
+            onTrain: { router.goToSession() },
+            onSleep: { router.goToProgress("recuperacion") })
     }
 
     private func precisionBar(_ p: SummaryToday.Precision) -> some View {
-        let pct = Int((p.weighed_pct * 100).rounded())
         let low = p.weighed_pct < 0.5
         return HStack(spacing: CBSpace.s2) {
             CBIcon(name: .scale, size: 14, color: low ? CB.estimated : CB.textSecondary)
-            Text("\(pct)% PESADO")
+            Text("\(CBNumber.percent(p.weighed_pct)) PESADO")
                 .font(CBFont.label)
                 .tracking(CBFont.Size.label * CBFont.labelTrackFactor)
                 .foregroundStyle(low ? CB.estimated : CB.textSecondary)
@@ -87,19 +91,19 @@ struct TodayView: View {
 
     private func weightCard(_ w: SummaryToday.Weight) -> some View {
         let delta: StatDelta? = w.delta_7d_kg.map { d in
-            StatDelta(value: String(format: "%.2f kg", abs(d)),
+            StatDelta(value: "\(CBNumber.format(abs(d), decimals: 2)) kg",
                       dir: d < 0 ? .down : (d > 0 ? .up : .flat),
                       period: "/sem", good: goalOnTrack(delta: d))
         }
         return StatCard(label: "Peso-tendencia",
-                        value: w.trend_kg.map { String(format: "%.1f", $0) } ?? "—",
+                        value: w.trend_kg.map { CBNumber.format($0, decimals: 1) } ?? "—",
                         unit: "kg", delta: delta,
-                        footnote: w.last_reading_kg.map { "última lectura \(String(format: "%.1f", $0)) kg" })
+                        footnote: w.last_reading_kg.map { "última lectura \(CBNumber.format($0, decimals: 1)) kg" })
     }
 
     private func tdeeCard(_ t: SummaryToday.TDEE) -> some View {
         StatCard(label: "TDEE",
-                 value: t.kcal > 0 ? String(Int(t.kcal.rounded())) : "—",
+                 value: t.kcal > 0 ? CBNumber.format(t.kcal.rounded(), decimals: 0) : "—",
                  unit: "kcal",
                  calibrating: t.status == "calibrating",
                  footnote: t.status == "adaptive" ? "adaptativo" : "calibrando",

@@ -168,7 +168,7 @@ struct MealEditSheet: View {
                         VStack(alignment: .leading, spacing: CBSpace.s2) {
                             Text("Cantidad (g)").cbLabel()
                             Stepper(value: $quantity, in: 0...2000, step: 5) {
-                                Text("\(Int(quantity)) g").cbNumber(28)
+                                Text("\(CBNumber.format(quantity, decimals: 0)) g").cbNumber(28)
                             }.tint(CB.bone)
                         }
                         livePreview
@@ -203,10 +203,10 @@ struct MealEditSheet: View {
     private var livePreview: some View {
         let m = meal.per100g?.scaled(toGrams: quantity) ?? Macros.zero
         return HStack(spacing: CBSpace.s5) {
-            previewMetric("\(Int(m.kcal))", "kcal")
-            previewMetric("\(Int(m.protein_g))", "P")
-            previewMetric("\(Int(m.carbs_g))", "C")
-            previewMetric("\(Int(m.fat_g))", "G")
+            previewMetric(CBNumber.format(m.kcal, decimals: 0), "kcal")
+            previewMetric(CBNumber.format(m.protein_g, decimals: 0), "P")
+            previewMetric(CBNumber.format(m.carbs_g, decimals: 0), "C")
+            previewMetric(CBNumber.format(m.fat_g, decimals: 0), "G")
         }
         .cbCard()
     }

@@ -11,7 +11,12 @@ final class ProgressViewModel {
     var energy: EnergyStatus?
     var selectedExerciseId: String?
     var exerciseProgress: Progress?
+    var recovery: Recovery?
     var loading = false
+
+    // Métricas crudas por tipo (para los charts de recuperación/composición). Se cargan
+    // del API (histórico amplio) con fallback a SwiftData.
+    private var metricsByType: [String: [BodyMetricDTO]] = [:]
 
     private let env: AppEnvironment
     init(env: AppEnvironment) { self.env = env }
@@ -22,7 +27,59 @@ final class ProgressViewModel {
         energy = (try? await env.api.getEnergyStatus()) ?? localEnergy()
         if selectedExerciseId == nil { selectedExerciseId = defaultExercise() }
         await loadExercise()
+        await loadRecovery()
     }
+
+    // MARK: - Recuperación / composición (V2)
+    private static let recoveryTypes = [
+        "sleep_deep_hours", "sleep_rem_hours", "sleep_core_hours", "sleep_awake_hours",
+        "sleep_hours", "sleep_midpoint_hour", "resting_hr", "hrv_ms", "body_fat_pct", "lean_mass_kg",
+    ]
+
+    func loadRecovery() async {
+        recovery = try? await env.api.getRecovery(date: CBDate.day())
+        let from = CBDate.day(Calendar.bogota.date(byAdding: .day, value: -400, to: Date()) ?? Date())
+        let to = CBDate.day()
+        for t in Self.recoveryTypes {
+            if let rows = try? await env.api.getBodyMetrics(type: t, from: from, to: to), !rows.isEmpty {
+                metricsByType[t] = rows
+            } else {
+                metricsByType[t] = localMetrics(type: t)
+            }
+        }
+    }
+
+    private func localMetrics(type: String) -> [BodyMetricDTO] {
+        let t = type
+        return ((try? env.context.fetch(FetchDescriptor<BodyMetric>(
+            predicate: #Predicate { $0.typeRaw == t && $0.deleted == false }))) ?? []).map { $0.toDTO() }
+    }
+
+    private func points(_ type: String) -> [TrendPoint] {
+        (metricsByType[type] ?? []).compactMap { m in
+            CBDate.date(fromDay: m.date).map { TrendPoint(date: $0, value: m.value) }
+        }.sorted { $0.date < $1.date }
+    }
+
+    func sleepNights() -> [SleepNight] {
+        func byDate(_ t: String) -> [String: Double] {
+            Dictionary((metricsByType[t] ?? []).map { ($0.date, $0.value) }, uniquingKeysWith: { _, b in b })
+        }
+        let deep = byDate("sleep_deep_hours"), rem = byDate("sleep_rem_hours")
+        let core = byDate("sleep_core_hours"), awake = byDate("sleep_awake_hours")
+        let dates = Set(deep.keys).union(rem.keys).union(core.keys)
+        return dates.compactMap { d -> SleepNight? in
+            guard let date = CBDate.date(fromDay: d) else { return nil }
+            return SleepNight(date: date, deep: deep[d] ?? 0, rem: rem[d] ?? 0, core: core[d] ?? 0, awake: awake[d] ?? 0)
+        }.sorted { $0.date < $1.date }
+    }
+
+    func rhrPoints() -> [TrendPoint] { points("resting_hr") }
+    func hrvPoints() -> [TrendPoint] { points("hrv_ms") }
+    func bodyFatPoints() -> [TrendPoint] { points("body_fat_pct") }
+    func leanMassPoints() -> [TrendPoint] { points("lean_mass_kg") }
+
+    var sleepNeedHours: Double { Double(env.fetchGoal(key: "sleep_need_hours")?.value ?? "") ?? FormulasKit.sleepNeedDefaultHours }
 
     func loadExercise() async {
         guard let id = selectedExerciseId else { return }

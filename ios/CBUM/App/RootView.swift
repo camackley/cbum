@@ -15,6 +15,20 @@ struct RootView: View {
         }
         .background(CB.bgApp.ignoresSafeArea())
         .environment(router)
+        .onAppear(perform: applyScreenshotHook)
+    }
+
+    // Hook de navegación para capturas deterministas (CBUM_SCREEN). Sin efecto en
+    // uso normal (variable ausente). Los rangos de chart se fijan por launch-args
+    // que iOS mapea a UserDefaults (-cbum.chartRange.<id> <valor>).
+    private func applyScreenshotHook() {
+        switch ProcessInfo.processInfo.environment["CBUM_SCREEN"] {
+        case "recovery": router.goToProgress("recuperacion")
+        case "body": router.goToProgress("cuerpo")
+        case "strength": router.goToProgress("fuerza")
+        case "settings": router.tab = .ajustes
+        default: break
+        }
     }
 
     @ViewBuilder

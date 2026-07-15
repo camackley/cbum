@@ -451,7 +451,7 @@ final class SessionViewModel {
             prs: prs, byMuscle: byMuscle, exercises: perExercise)
     }
 
-    private func fmt(_ v: Double) -> String { v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v) }
+    private func fmt(_ v: Double) -> String { CBNumber.smart(v) }
 
     // MARK: - Fallback offline session (programa local + §5.4)
     private func buildLocalSession() -> (String, String, [SessionExercise])? {

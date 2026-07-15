@@ -52,6 +52,7 @@ protocol APIClient {
     func getGoals() async throws -> [String: String]
     func getProgram() async throws -> ProgramDTO?
     func getSummaryToday(date: String) async throws -> SummaryToday
+    func getRecovery(date: String) async throws -> Recovery
     func getEnergyStatus() async throws -> EnergyStatus
     func getProgress(exerciseId: String?) async throws -> Progress
     func getNextSession(date: String) async throws -> NextSession
@@ -177,6 +178,9 @@ final class LiveAPIClient: APIClient {
     }
     func getSummaryToday(date: String) async throws -> SummaryToday {
         try decode(SummaryToday.self, await request("GET", "/api/summary/today", query: ["date": date]))
+    }
+    func getRecovery(date: String) async throws -> Recovery {
+        try decode(Recovery.self, await request("GET", "/api/recovery", query: ["date": date]))
     }
     func getEnergyStatus() async throws -> EnergyStatus {
         try decode(EnergyStatus.self, await request("GET", "/api/energy-status"))

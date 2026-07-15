@@ -279,7 +279,7 @@ struct SessionView: View {
         default: return ex.lastSessionLabel ?? ""
         }
     }
-    private func fmt(_ v: Double) -> String { v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v) }
+    private func fmt(_ v: Double) -> String { CBNumber.smart(v) }
 }
 
 private struct IdxWrap: Identifiable { let id: Int }

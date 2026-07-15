@@ -130,8 +130,96 @@ wrangler dev --local
 
 # Parte 2 · iOS (Agente B)
 
-> **Propuestas de cambio de contrato:** ninguna hasta ahora. Si algo requiriera
-> cambiar `01-contracts.md`, se anota aquí como PROPUESTA (no se cambia unilateralmente).
+> **Propuestas de cambio de contrato:** ninguna. Para V2 se implementó EXACTO el
+> delta `specs/v2/01-contracts-delta.md`. (El §R2 del delta ya se auto-corrige a
+> `recovery_state:"caution"` para el vector-trampa; no requiere PROPUESTA.)
+
+---
+
+## 2026-07-15 · V2 — Sueño/recuperación + charts interactivos (I5 → I6)
+
+### 🔴 Migración V1→V2: bundle id de producción (hallazgo crítico)
+`ios/project.yml` estaba **desactualizado** respecto al `.pbxproj` que el usuario
+tiene en producción: el YAML decía `com.mackley.cbum` + `DEVELOPMENT_TEAM:""`, pero
+el proyecto commiteado en `main` usa **`com.camackley.cbum` + team `X6M3893ZHP`** (el
+usuario lo cambió en Xcode y commiteó el pbxproj sin tocar el YAML). Regenerar con
+`xcodegen generate` desde el YAML viejo **cambiaba el bundle id** → iOS trataría la V2
+como app nueva y **perdería el store de SwiftData** (instrucción 7). Se corrigió
+`project.yml` a los valores de producción (bundle id + team + versión 1.1/2). Ahora la
+regeneración es fiel y la migración se preserva.
+- **SwiftData**: la migración es un **no-op**. Los tipos nuevos de `body_metrics` son
+  cases de enum (`BodyMetricType`) guardados como `typeRaw: String` — NO agregan
+  propiedades stored a ningún `@Model` → el schema no cambia → el store V1 abre sin
+  migración pesada y sin pérdida de datos.
+- **Keychain**: el token sobrevive — `Keychain.service` es la constante
+  `"com.mackley.cbum"`, independiente del bundle id.
+
+### XcodeGen ahora sí disponible (deroga la nota de 2026-07-14)
+El entorno tiene Xcode 26.6 + simuladores. Se instaló `xcodegen` (brew) y `project.yml`
+volvió a ser la fuente reproducible real (glob de `CBUM/` → los archivos nuevos entran
+sin editar el pbxproj). Build/test verificados en simulador iPhone 17.
+
+### Recuperación — paridad EXACTA con el backend
+- `FormulasKit` V2 replica `backend/src/lib/formulas.ts` §R5: `median`, `baseline28`
+  (ventana [hoy−28, ayer], mín 14), `deviationPct`, `rhr/hrv/sleepStatus`,
+  `midpointDrift`, `recoveryState` (reglas en orden). Tests `RecoveryFormulasTests`
+  cubren TODOS los vectors del delta, incluido el **vector-trampa** (sleep 6.95 +
+  rhr +5.2 + hrv −22.6 → `caution`, no `low`). 10 tests V2 verdes.
+- `RecoveryCompute.build` es el MISMO algoritmo que `recovery.ts` (arma el shape §R2),
+  compartido por el `MockAPIClient` y el **fallback local** del `TodayViewModel`
+  (SwiftData) → la app offline y `get_recovery` del coach dan iguales números.
+
+### HealthKit (I5 §1)
+- Sueño con **fases**: ventana nocturna 18:00→18:00 (Bogotá) resuelta como
+  `wakeDate = día(muestra.start + 6h)` (asigna [D−1 18:00, D 18:00) → fecha D). Antes
+  V1 asignaba por `endDate` (follow-up que quedaba pendiente en DECISIONS V1): ahora es
+  la ventana estricta del delta.
+- `asleepUnspecified` suma a `core_hours` y a `sleep_hours` (delta §R1); `awake` NO
+  suma a total. `midpoint_hour` = hora decimal local del punto medio del bloque
+  principal (1er inicio → último fin de asleep*).
+- **Dedup de fuentes**: si iPhone y wearable reportan la misma noche, se prefiere la
+  fuente CON fases (deep/rem/core); empate → mayor tiempo asleep. Evita doble conteo.
+- HRV/RHR/respiración: promedio discreto diario (1 valor/día). Composición
+  (grasa%·100, masa magra kg): cada muestra, anchors por tipo como el peso.
+- **Backfill 90d**: el primer import V2 trae 90 días (los baselines 28d necesitan
+  historia); luego 14. Flag `hkBackfilledV2`. Toggles de importación por categoría en
+  Ajustes (HealthKit no deja togglear permisos de LECTURA por API → esto controla qué
+  importa la app), + `sleep_need_hours` editable.
+
+### Charts V2 (I6 / delta §R6)
+- `CBRangePicker` (1M/3M/6M/1A/TODO, default 3M) persistido por chart en UserDefaults;
+  `TrendChart`, `SleepStackedBars`, `BaselineBandChart`, `CompositionChart` lo usan.
+  La serie se filtra por rango; el EMA se calcula sobre la serie completa aguas arriba.
+- **Bug 1** (peso multi-año ilegible): filtrado por rango + dominio Y de la serie
+  **visible** ±5% + eje `d MMM` (≤6M) / `MMM yy` (mayores). Antes/después en el PR.
+- **Bug 2** (RITMO partido): `StatCard` con `lineLimit(1)` + `minimumScaleFactor(0.6)`
+  + `monospacedDigit` + sufijo con ancho reservado. **Caveat**: el "split en dos
+  líneas" reportado depende del ancho del contenedor / Dynamic Type; con los valores
+  del mock en el simulador iPhone 17 no se dispara (el mismo valor cabe en una línea).
+  El fix es **defensivo**: garantiza UNA línea a cualquier ancho. El antes/después
+  muestra además el cambio de formato (punto → coma es-CO) y la garantía de una línea.
+- Scrubbing: `chartOverlay` + drag → línea vertical + lollipop (valor + fecha "14 jul"),
+  haptic `.selection` al cambiar de punto, desvanece 2s tras soltar.
+- Gaps de datos = huecos reales (puntos, sin línea interpolada) + banner cuando
+  `data_gaps` no está vacío. PROHIBIDO interpolar (delta §R6 / principio de precisión).
+
+### Formato es-CO
+- `CBNumber` (Locale es_CO): `1.830`, `133,3`, `+0,07`. Se reemplazaron los
+  `String(format:)`/`\(Int(...))` de UI en Features/ (Today, Progress, Nutrition,
+  Session). **Excepciones no ruteadas** (no son cantidades decimales): el timer
+  `MM:SS` (`%02d:%02d:%02d`) y la etiqueta ISO-week (`%04d-W%02d`).
+
+### Mock determinista
+Se eliminó `Double.random` del seed (aprendizaje del bug V1 de datos no
+reproducibles): pesos con wobble determinista por índice. IDs deterministas
+`mock-bm-<type>-<date>`. Seed V2: 60 días de recuperación con baselines estables
+(rhr 58, hrv 62, midpoint 2.8) + HOY el vector-trampa, ~5 años de peso semanal (para
+ejercitar 1A/TODO y demostrar el fix del Bug 1) y 13 semanas de composición.
+
+### Hook de screenshots
+`RootView` lee `CBUM_SCREEN` (env) para navegar a una pantalla en el arranque y los
+rangos de chart se fijan por launch-args (`-cbum.chartRange.<id> <valor>` → UserDefaults)
+para capturas deterministas. Sin efecto en producción (variable ausente).
 
 ---
 
@@ -170,6 +258,44 @@ que las soporta está completo):** modo avión (log meal/workout offline → out
 `GET /api/export` tras reconectar), kill a mitad de outbox sin duplicar (ids UUID +
 upsert), meal en app Salud + borrado que desaparece de Salud, edición de porción
 recalculada igual local y server, e1RM inválido no graficado.
+
+---
+
+## Checklist de integración V2 (`v2/00-overview-v2.md §DoD`) — lado iOS
+
+Verificados en simulador contra el `MockAPIClient` (mismo shape/algoritmo que el
+backend V2). Para verificar contra el backend real: Ajustes → apagar "Usar mock local",
+poner base URL + API token.
+
+1. **Sueño de anoche (con fases) visible en HOY y PROGRESO→RECUPERACIÓN tras sync.**
+   ✅ Verificado en sim: HOY muestra la columna DORMIR (horas + mini-barra de fases) y
+   el chip de `recovery_state`; RECUPERACIÓN muestra las barras apiladas por fase con
+   línea de necesidad. Wiring: `TodayViewModel`/`ProgressViewModel` leen
+   `GET /api/recovery` (+ `getBodyMetrics` por tipo) con fallback local `RecoveryCompute`.
+   Verificar con backend: agregar una noche con fases en Salud (sim), "Importar de Salud".
+
+2. **Charts con rango + scrub en Fuerza / Cuerpo / Recuperación.** ✅ Verificado:
+   `CBRangePicker` (default 3M) persistido por chart; scrubbing con lollipop; cambio de
+   rango filtra en memoria (< 100ms con ~1.800 puntos de EMA de 5 años).
+
+3. **Los 2 bugs de UI cerrados con screenshot antes/después.** ✅ En `docs/screenshots/`
+   (`03-cuerpo-ANTES` vs `05-cuerpo-todo-DESPUES` / `04-cuerpo-3m-DESPUES`).
+
+4. **Integración: `get_recovery` desde el chat del coach responde lo MISMO que la app.**
+   ⏳ Pendiente de backend V2 desplegado. Garantía de paridad: la app usa
+   `RecoveryCompute.build` (mismo algoritmo que `backend/src/services/recovery.ts`) y
+   `FormulasKit` V2 = `backend/src/lib/formulas.ts` §R5 (mismos test vectors verdes en
+   ambos lados). Verificar: apagar mock, comparar `get_recovery` (Claude) vs
+   HOY/RECUPERACIÓN para la misma fecha → mismos números.
+
+5. **Backfill 90d → `body_metrics` con hrv/rhr/sueño históricos.** ✅ Código completo
+   (`importFromHealthKit` con `vitalDays = hkBackfilledV2 ? 14 : 90`). Verificar con
+   backend real + export tras el primer "Importar de Salud".
+
+6. **`no_data` honesto (sin datos de sueño ≥3 días).** ✅ El chip muestra "SIN DATOS DE
+   SUEÑO — revisa el puente" y RECUPERACIÓN muestra banner de `data_gaps`; el helper
+   nunca interpola. (En el mock por defecto HOY tiene datos → `caution`; el escenario
+   `no_data` se alcanza sin datos de sueño recientes.)
 
 ---
 

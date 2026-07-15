@@ -72,17 +72,28 @@ final class MockAPIClient: APIClient {
         programDTO = ProgramDTO(id: "prog-1", start_date: startDay,
                                 json: program, active: 1, updated_at: bump(), deleted: 0)
 
+        // Histórico multi-año (~5 años, semanal): de ~92 kg (2021) a ~83 kg. Ejercita
+        // los rangos 1A/TODO y demuestra el fix del Bug 1 (chart de peso multi-año).
+        var histW = 92.0
+        for wk in stride(from: 260, through: 4, by: -1) {
+            let d = cal.date(byAdding: .day, value: -wk * 7, to: Date()) ?? Date()
+            histW -= 0.035
+            let wobble = Double((wk * 7) % 5 - 2) / 20.0   // determinista, sin Date.random en seed
+            bodyMetrics.append(bm("weight_kg", value: ((histW + wobble) * 10).rounded() / 10, date: d))
+        }
         // Pesajes últimos 24 días (tendencia bajando ~0.03/día), un par de días sin pesaje.
         var base = 83.2
         for i in stride(from: 24, through: 0, by: -1) {
             if i == 5 || i == 12 { base -= 0.03; continue } // días sin pesaje
             let d = cal.date(byAdding: .day, value: -i, to: Date()) ?? Date()
-            base -= Double.random(in: 0.0...0.06)
+            base -= Double(((24 - i) * 3) % 6) / 100.0
             bodyMetrics.append(bm("weight_kg", value: (base * 10).rounded() / 10, date: d))
         }
-        // Pasos y sueño de hoy (informativos)
+        // Pasos de hoy (informativo)
         bodyMetrics.append(bm("steps", value: 8420, date: Date()))
-        bodyMetrics.append(bm("sleep_hours", value: 7.4, date: Date()))
+        // Sueño/HRV/RHR + composición (V2). IDs deterministas por (type,date).
+        seedRecovery()
+        seedComposition()
 
         // Comidas de hoy (mezcla pesado/etiqueta/estimado)
         let today = CBDate.day()
@@ -124,6 +135,54 @@ final class MockAPIClient: APIClient {
                 ts_start: CBDate.ts(d), ts_end: CBDate.ts(d.addingTimeInterval(3600)),
                 date: CBDate.day(d), program_day_id: "upper_a", notes: nil, sets: sets,
                 updated_at: bump(), deleted: 0))
+        }
+    }
+
+    // Sueño con fases + RHR + HRV (V2). Historial de 60 días con baselines estables
+    // (rhr 58, hrv 62, midpoint 2.8) para reproducir los números del delta §R2, y HOY
+    // el vector-trampa (sleep 6.95 + rhr +5.2 + hrv −22.6 → caution).
+    private func seedRecovery() {
+        for i in 1...60 {
+            let d = cal.date(byAdding: .day, value: -i, to: Date()) ?? Date()
+            let w = Double((i * 13) % 7 - 3) / 20.0   // determinista ∈ [-0.15, 0.15]
+            let deep = 1.05 + w * 0.5
+            let rem = 1.45 + w
+            let core = 4.35 - w * 0.5
+            let awake = 0.55 + abs(w) * 0.4
+            addPhaseNight(date: d, deep: deep, rem: rem, core: core, awake: awake,
+                          total: deep + rem + core, inbed: deep + rem + core + awake + 0.25, midpoint: 2.8)
+            bodyMetrics.append(bm("resting_hr", value: 58, date: d))
+            bodyMetrics.append(bm("hrv_ms", value: 62, date: d))
+            bodyMetrics.append(bm("respiratory_rate", value: 14.2, date: d))
+        }
+        let today = Date()
+        addPhaseNight(date: today, deep: 1.20, rem: 1.55, core: 4.20, awake: 0.80,
+                      total: 6.95, inbed: 7.75, midpoint: 3.4)
+        bodyMetrics.append(bm("resting_hr", value: 61, date: today))
+        bodyMetrics.append(bm("hrv_ms", value: 48, date: today))
+        bodyMetrics.append(bm("respiratory_rate", value: 15.1, date: today))
+    }
+
+    private func addPhaseNight(date d: Date, deep: Double, rem: Double, core: Double,
+                               awake: Double, total: Double, inbed: Double, midpoint: Double) {
+        func r2(_ x: Double) -> Double { (x * 100).rounded() / 100 }
+        bodyMetrics.append(bm("sleep_hours", value: r2(total), date: d))
+        bodyMetrics.append(bm("sleep_deep_hours", value: r2(deep), date: d))
+        bodyMetrics.append(bm("sleep_rem_hours", value: r2(rem), date: d))
+        bodyMetrics.append(bm("sleep_core_hours", value: r2(core), date: d))
+        bodyMetrics.append(bm("sleep_awake_hours", value: r2(awake), date: d))
+        bodyMetrics.append(bm("sleep_inbed_hours", value: r2(inbed), date: d))
+        bodyMetrics.append(bm("sleep_midpoint_hour", value: midpoint, date: d))
+    }
+
+    // Composición (báscula): recomposición grasa%↓ + masa magra↑, semanal como el peso.
+    private func seedComposition() {
+        var bf = 16.8, lean = 68.5
+        for wk in stride(from: 12, through: 0, by: -1) {
+            let d = cal.date(byAdding: .day, value: -wk * 7, to: Date()) ?? Date()
+            bf -= 0.12; lean += 0.18
+            bodyMetrics.append(bm("body_fat_pct", value: (bf * 10).rounded() / 10, date: d))
+            bodyMetrics.append(bm("lean_mass_kg", value: (lean * 10).rounded() / 10, date: d))
         }
     }
 
@@ -260,6 +319,8 @@ final class MockAPIClient: APIClient {
         let pct = dayMeals.isEmpty ? 0 : Double(weighed) / Double(dayMeals.count)
         let energy = try await getEnergyStatus()
         let sess = sessionSummary(for: date)
+        // §R3: reusar getRecovery (solo sleep_hours + state; no recalcular aparte).
+        let rec = try await getRecovery(date: date)
         return SummaryToday(
             date: date,
             intake: .init(kcal: intake.kcal, protein_g: intake.protein_g, carbs_g: intake.carbs_g, fat_g: intake.fat_g, fiber_g: intake.fiber_g),
@@ -268,7 +329,19 @@ final class MockAPIClient: APIClient {
             weight: .init(trend_kg: energy.weight.trend_kg, delta_7d_kg: delta7d(), last_reading_kg: lastWeight()?.value, last_reading_date: lastWeight()?.date),
             tdee: .init(kcal: energy.tdee.kcal, status: energy.tdee.status),
             session: sess,
-            logging_complete: dayFlags[date]?.logging_complete == 1)
+            logging_complete: dayFlags[date]?.logging_complete == 1,
+            recovery: .init(sleep_hours: rec.sleep.hours, recovery_state: rec.recovery_state))
+    }
+
+    // §R2: mismo algoritmo compartido que el fallback local del ViewModel y el backend.
+    func getRecovery(date: String) async throws -> Recovery {
+        let sn = dbl("sleep_need_hours")
+        let needHours = sn > 0 ? sn : FormulasKit.sleepNeedDefaultHours
+        return RecoveryCompute.build(date: date, needHours: needHours) { type in
+            bodyMetrics.filter { $0.deleted != 1 && $0.type == type && $0.date <= date }
+                .sorted { ($0.date, $0.ts) < ($1.date, $1.ts) }
+                .map { FormulasKit.DatedValue(date: $0.date, value: $0.value) }
+        }
     }
 
     func getEnergyStatus() async throws -> EnergyStatus {

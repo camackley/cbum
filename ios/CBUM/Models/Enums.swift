@@ -43,11 +43,25 @@ enum Equipment: String, Codable, CaseIterable {
 }
 
 enum BodyMetricType: String, Codable, CaseIterable {
+    // V1
     case weightKg = "weight_kg"
     case steps
     case sleepHours = "sleep_hours"
     case restingHr = "resting_hr"
     case activeKcal = "active_kcal"
+    // V2 vitales (delta §R1)
+    case hrvMs = "hrv_ms"
+    case respiratoryRate = "respiratory_rate"
+    // V2 fases de sueño / eficiencia / consistencia
+    case sleepDeepHours = "sleep_deep_hours"
+    case sleepRemHours = "sleep_rem_hours"
+    case sleepCoreHours = "sleep_core_hours"
+    case sleepAwakeHours = "sleep_awake_hours"
+    case sleepInbedHours = "sleep_inbed_hours"
+    case sleepMidpointHour = "sleep_midpoint_hour"
+    // V2 composición (báscula)
+    case bodyFatPct = "body_fat_pct"
+    case leanMassKg = "lean_mass_kg"
 }
 
 enum MetricSource: String, Codable {
