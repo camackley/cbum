@@ -22,7 +22,7 @@ enum CB {
   static let estimated = Color(hex: 0xD4B85A)     // datos estimados / baja confianza
 }
 ```
-Si el usuario entrega un design system generado desde `design-brief.md`, sus valores reemplazan estos defaults (solo cambiar `Theme.swift`).
+**Fuente oficial del design system:** el proyecto de Claude Design `https://claude.ai/design/p/eba28535-913e-42d4-b8dd-dff398d9ce89` (importar vía claude_design MCP: `https://api.anthropic.com/v1/design/mcp`, auth con `/design-login`). Sus tokens (colores, tipografía, radios, espaciado, estados) REEMPLAZAN los defaults de arriba — los de arriba son solo fallback si el MCP no está disponible. Mapear todo a `Theme.swift`/`CBFont`; los 12 componentes deben seguir la anatomía y estados definidos en ese proyecto.
 
 **Tipografía:** display = system SF Pro, `.fontWidth(.condensed)`, weight `.black`, UPPERCASE, tracking −0.5 para títulos y números protagonistas. Helpers: `CBFont.display(_ size:)` (títulos 28–34), `CBFont.number(_ size:)` (números gigantes 40–64, monospacedDigit), `CBFont.body` (17 regular), `CBFont.caption` (13). Radios: 4pt (duros). Espaciado: grid 4pt. Animaciones: 0.15s easeOut, sin bounce; excepción: celebración de PR (0.4s spring + haptic `.success`).
 
