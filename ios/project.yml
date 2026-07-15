@@ -1,0 +1,71 @@
+# XcodeGen spec — fuente reproducible del proyecto CBUM.
+# El .xcodeproj versionado se generó a partir de esta definición
+# (con un generador equivalente, porque este entorno no tiene XcodeGen).
+# Si tienes XcodeGen instalado: `xcodegen generate` regenera CBUM.xcodeproj.
+name: CBUM
+options:
+  bundleIdPrefix: com.mackley
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: es
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"          # solo iPhone
+    ENABLE_PREVIEWS: "YES"
+
+targets:
+  CBUM:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: CBUM
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mackley.cbum
+        PRODUCT_NAME: CBUM
+        GENERATE_INFOPLIST_FILE: "NO"
+        INFOPLIST_FILE: CBUM/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CBUM/Resources/CBUM.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""             # Personal Team: se fija en Xcode
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_EMIT_LOC_STRINGS: "YES"
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+    # HealthKit, SwiftUI, Charts y SwiftData se enlazan implícitamente por import.
+
+  CBUMTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: CBUMTests
+    dependencies:
+      - target: CBUM
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mackley.cbumTests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CBUM.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CBUM"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+
+schemes:
+  CBUM:
+    build:
+      targets:
+        CBUM: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CBUMTests
