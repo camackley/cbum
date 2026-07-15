@@ -6,7 +6,19 @@ Registro de decisiones de implementación no cubiertas por las specs y desviacio
 
 - **Todo el código del backend vive en `backend/`** (`backend/src`, `backend/migrations`, `backend/test`, `backend/wrangler.jsonc`, `backend/COACH.md`), como exigen `specs/00-overview.md` y B1. La raíz del repo es el proyecto `cbum/` y contiene `PLAN.md`, `design-brief.md`, `DECISIONS.md`, `specs/` y `backend/` (y `ios/` del Agente B). Ejecuta los comandos de wrangler/npm desde `backend/`.
 
-## Correcciones post-review
+## Correcciones post-review (2ª ronda, modelo Fable)
+
+- **🔴 Catálogo invisible en el primer sync:** el seed usaba `updated_at=0` y `/api/changes` filtra `updated_at > since` con `since ≥ 0`, así que los 28 ejercicios nunca llegaban en el sync inicial de iOS. Ahora se siembran con `updated_at=1` → llegan con `since=0`. (`migrations/0002`).
+- **🟠 `POST /api/body-metrics` reventaba con 500** si el mismo `id` llegaba con otra tupla `(type,ts,source)` (ej. editar la hora de un pesaje): el `ON CONFLICT(type,ts,source)` no cubre el PK `id`. Ahora es `DELETE por id` + `INSERT ON CONFLICT(tuple) DO UPDATE` en batch: idempotente, dedup de re-sync HealthKit (conserva el id existente en colisión de tupla) y sin 500 que envenene el outbox de iOS.
+- **🟠 TDEE `calibrating` no inventa demografía:** si faltan `sex`/`age`/`height_cm`/`activity_factor` (o el peso), `tdee.kcal = null` en vez de calcular Mifflin con defaults. Además `PUT /api/goals`/`set_goals` ahora **validan** keys conocidas (contracts §1), tipos, y rango de `activity_factor` (1.2–1.9) → 422.
+- **🟡 `sets` requerido en `POST /api/workouts`:** omitir la key `sets` daba `[]` por default y la reconciliación borraba TODOS los sets. Ahora es requerido (omisión → 422); un `[]` explícito sí limpia.
+- **🟡 `POST /api/meals` exige `id` y `meal_group_id`** en el path REST (idempotencia + agrupación). El path MCP los genera antes de validar.
+- **🟡 `get_body_metrics.ema_series`** se calcula sobre TODO el historial (carry-forward real) y se recorta al rango, en vez de re-sembrar el EMA con la lectura cruda del día `from`.
+- **🟡 Cursor de `/api/changes` con margen de seguridad de 2s:** evita perder writes concurrentes que sellan `updated_at` justo antes del cursor. Re-entrega una ventana pequeña (idempotente en iOS). El smoke lo contempla.
+- **🟡 MCP:** notificaciones (sin `id`) nunca reciben respuesta (202); `initialize` negocia `protocolVersion` a una versión soportada; secret comparado en tiempo constante.
+- **Nits:** `deleteWorkout` no re-bumpea sets ya borrados; fallback de energía Atwater (2047/2048) en USDA; `pageSize` de USDA respeta `page_size`; `weightReadings` ordena por `date, ts`.
+
+## Correcciones post-review (1ª ronda)
 
 - **TDEE en onboarding (bloqueante corregido):** el balance energético solo se computa si el trend de peso (EMA) **cubre toda la ventana de 21 días** (hay EMA en `windowStart`). Si el primer pesaje es posterior a `windowStart` (primeras ~3 semanas), `adaptiveTdee` recibe `trendCoversWindow=false` y cae a `calibrating`/Mifflin. Esto evita el bug de `emaFirst=0` que producía ΔEMA≈peso y un TDEE absurdo presentado como fiable. Coherente con "primeras 2 semanas = provisional" del PLAN.
 - **Días `logging_complete` sin comida:** un día marcado complete con 0 meals o `kcal < 500` se **excluye** del promedio de ingesta del TDEE (arrastraría el TDEE hacia abajo). Se reporta en `energy-status.tdee.incomplete_days_excluded`. `complete_days_used` refleja los días realmente usados (post-exclusión) y alimenta el gate de ≥10 días.
@@ -34,7 +46,8 @@ Registro de decisiones de implementación no cubiertas por las specs y desviacio
 
 - **Ancla de la ventana de 21 días en `/api/energy-status`:** el endpoint no recibe `date`. Se ancla al **último día con pesaje** (último punto de la serie EMA). `summary/today` sí usa el `date` recibido. Motivo: el server no hace math de timezone; el dato manda.
 - **`weighins_used`:** se cuentan **días distintos con pesaje** dentro de la ventana (no lecturas crudas), coherente con "pesaje diario".
-- **`adherence_pct`:** `complete_days_used / 21` (window_days). Reproduce el ejemplo de contracts §3.2 (16/21 ≈ 0.76).
+- **`adherence_pct`:** `complete_days_used / 21` (window_days), redondeado a **2 decimales** → reproduce el ejemplo de contracts §3.2 (16/21 = 0.76).
+- **Redondeo:** pesos/EMA/tendencia a 1 decimal (82.4, 83.1); porcentajes, tasas y deltas a **2 decimales** (`weighed_pct`, `adherence_pct`, `rate_*`, `delta_7d_kg`, `delta_window_kg`) para reproducir los ejemplos del contrato (0.72, −0.21, −0.31, −0.62). `on_track` se evalúa sobre el valor **sin redondear** (el redondeo no debe voltear el veredicto que decide ajustar calorías).
 - **`rate_actual_kg_per_week`:** `ΔEMA_ventana / (21/7)` = ΔEMA/3.
 - **`goal.on_track`:** `true` si `|rate_actual − rate_target| ≤ 0.1` kg/sem. Reproduce el ejemplo (−0.21 vs −0.35 → false).
 - **TDEE `calibrating` sin peso ni `goal_weight_kg`:** `tdee.kcal = null` (no hay Mifflin fiable sin peso). Con peso/goal disponible se usa Mifflin normal.

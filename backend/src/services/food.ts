@@ -50,7 +50,9 @@ function hashQuery(q: string): string {
 // ── USDA FoodData Central (búsqueda por texto) ───────────────────────────────
 // Ranking: Foundation > SR Legacy > Branded para genéricos; Branded se mantiene si el query parece marca.
 const DATA_TYPE_RANK: Record<string, number> = { Foundation: 0, 'SR Legacy': 1, Branded: 2 };
-const FDC_NUTRIENT = { kcal: 1008, protein: 1003, carbs: 1005, fat: 1004, fiber: 1079 };
+// 1008 = Energy (kcal). 2047/2048 = Energy (Atwater General/Specific): algunos Foundation
+// reportan energía solo por Atwater; se usan como fallback para no descartar la fuente preferida.
+const FDC_NUTRIENT = { kcal: 1008, kcalAtwaterGeneral: 2047, kcalAtwaterSpecific: 2048, protein: 1003, carbs: 1005, fat: 1004, fiber: 1079 };
 
 function mapFdcFood(food: any): FoodCandidate | null {
   const nutrients: Record<number, number> = {};
@@ -59,7 +61,7 @@ function mapFdcFood(food: any): FoodCandidate | null {
     const val = n.value ?? n.amount;
     if (id != null && val != null) nutrients[id] = val;
   }
-  const kcal = nutrients[FDC_NUTRIENT.kcal];
+  const kcal = nutrients[FDC_NUTRIENT.kcal] ?? nutrients[FDC_NUTRIENT.kcalAtwaterGeneral] ?? nutrients[FDC_NUTRIENT.kcalAtwaterSpecific];
   if (kcal == null) return null; // sin energía no sirve
   return {
     fdc_id: food.fdcId,
@@ -90,7 +92,8 @@ export async function searchUsda(env: Env, query: string, pageSize = 5): Promise
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, dataType: ['Foundation', 'SR Legacy', 'Branded'], pageSize: 10 }),
+    // Traer suficientes para el ranking y para satisfacer page_size (cap 50 por cordura).
+    body: JSON.stringify({ query, dataType: ['Foundation', 'SR Legacy', 'Branded'], pageSize: Math.min(50, Math.max(10, pageSize)) }),
   });
   if (!res.ok) {
     return { found: false, source: 'usda', candidates: [], message: `USDA FDC respondió ${res.status}.` };

@@ -16,16 +16,22 @@ export interface MetricRow {
 const COLS = 'id, ts, date, type, value, source, updated_at, deleted';
 
 // Upsert por (type,ts,source) — dedup de re-sync HealthKit (contracts §1).
+// La tabla tiene DOS constraints: PK(id) y UNIQUE(type,ts,source). Un ON CONFLICT
+// solo cubre uno; si el mismo id llega con otra tupla (ej. editar la hora de un pesaje)
+// se violaría el PK → 500. Por eso: DELETE por id (limpia la fila vieja de ese id) +
+// INSERT ON CONFLICT(tuple) (dedup de re-sync; conserva el id existente en colisión de tupla).
 export async function upsertBodyMetrics(env: Env, metrics: MetricInput[]): Promise<number> {
   const ts = now();
-  const sql = `INSERT INTO body_metrics (${COLS}) VALUES (?,?,?,?,?,?,?,?)
+  const insertSql = `INSERT INTO body_metrics (${COLS}) VALUES (?,?,?,?,?,?,?,?)
     ON CONFLICT(type, ts, source) DO UPDATE SET
       date=excluded.date, value=excluded.value, updated_at=excluded.updated_at, deleted=0`;
-  const stmts = metrics.map((m) =>
-    env.DB.prepare(sql).bind(m.id, m.ts, m.date, m.type, m.value, m.source, ts, 0),
-  );
+  const stmts: D1PreparedStatement[] = [];
+  for (const m of metrics) {
+    stmts.push(env.DB.prepare(`DELETE FROM body_metrics WHERE id=?`).bind(m.id));
+    stmts.push(env.DB.prepare(insertSql).bind(m.id, m.ts, m.date, m.type, m.value, m.source, ts, 0));
+  }
   if (stmts.length > 0) await env.DB.batch(stmts);
-  return stmts.length;
+  return metrics.length;
 }
 
 export async function getBodyMetrics(

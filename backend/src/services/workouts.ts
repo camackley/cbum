@@ -146,7 +146,7 @@ export async function deleteWorkout(env: Env, id: string): Promise<void> {
   const ts = now();
   const res = await env.DB.batch([
     env.DB.prepare(`UPDATE workouts SET deleted=1, updated_at=? WHERE id=? AND deleted=0`).bind(ts, id),
-    env.DB.prepare(`UPDATE sets SET deleted=1, updated_at=? WHERE workout_id=?`).bind(ts, id),
+    env.DB.prepare(`UPDATE sets SET deleted=1, updated_at=? WHERE workout_id=? AND deleted=0`).bind(ts, id),
   ]);
   if (!res[0]!.meta.changes) throw notFound('Workout no encontrado');
 }

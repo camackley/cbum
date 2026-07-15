@@ -219,10 +219,12 @@ export const TOOLS: McpTool[] = [
         series: metrics.map((m) => ({ date: m.date, ts: m.ts, value: m.value, source: m.source })),
       };
       if (a.type === 'weight_kg') {
-        out.ema_series = emaSeries(metrics.map((m) => ({ date: m.date, kg: m.value }))).map((p) => ({
-          date: p.date,
-          ema_kg: round1(p.ema),
-        }));
+        // EMA sobre TODO el historial hasta `to` (carry-forward real), recortado a [from,to].
+        // No re-sembrar con las lecturas del rango: ema_0 no debe ser la lectura cruda del día `from`.
+        const hist = await metricsSvc.getBodyMetrics(env, { type: 'weight_kg', to: a.to });
+        out.ema_series = emaSeries(hist.map((m) => ({ date: m.date, kg: m.value })))
+          .filter((p) => p.date >= a.from && p.date <= a.to)
+          .map((p) => ({ date: p.date, ema_kg: round1(p.ema) }));
       }
       return out;
     },

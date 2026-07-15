@@ -5,6 +5,7 @@ import {
   suggestWeight,
   weeklyEffectiveSets,
   round1,
+  round2,
   type WeightReading,
   type EmaPoint,
   type MifflinInput,
@@ -62,7 +63,7 @@ async function weightReadings(env: Env, upTo?: string): Promise<WeightReading[]>
   const clause = upTo ? 'AND date <= ?' : '';
   const binds = upTo ? [upTo] : [];
   const { results } = await env.DB.prepare(
-    `SELECT date, value FROM body_metrics WHERE type='weight_kg' AND deleted=0 ${clause} ORDER BY date ASC`,
+    `SELECT date, value FROM body_metrics WHERE type='weight_kg' AND deleted=0 ${clause} ORDER BY date ASC, ts ASC`,
   )
     .bind(...binds)
     .all<{ date: string; value: number }>();
@@ -158,7 +159,7 @@ async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> 
   const emaFirst = emaAt(series, windowStart);
   const emaLast = trendKg;
   const trendCoversWindow = emaFirst != null;
-  const deltaWindow = emaFirst != null && emaLast != null ? round1(emaLast - emaFirst) : null;
+  const deltaWindow = emaFirst != null && emaLast != null ? round2(emaLast - emaFirst) : null;
 
   // Días complete en ventana → kcal por día. Excluir días marcados complete pero
   // con 0 meals o kcal < MIN (mal marcados): arrastrarían el promedio del TDEE hacia abajo.
@@ -174,14 +175,22 @@ async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> 
   const weighinsUsed = await weighinDaysInRange(env, windowStart, refDate);
   const avgKcal = completeDayKcals.length ? round1(completeDayKcals.reduce((a, b) => a + b, 0) / completeDayKcals.length) : null;
 
-  // Mifflin fallback necesita datos de goals + peso tendencia.
-  const sex = goals.sex === 'f' ? 'f' : 'm';
+  // Mifflin fallback: SOLO con datos reales de goals + peso tendencia. Nunca inventar
+  // demografía (PRINCIPIO PRECISIÓN: rechazar/anular, no rellenar con defaults).
+  const sexRaw = goals.sex;
+  const ageN = num(goals.age);
+  const heightN = num(goals.height_cm);
+  const afN = num(goals.activity_factor);
+  const weightN = trendKg ?? num(goals.goal_weight_kg);
+  const hasMifflinInputs =
+    (sexRaw === 'm' || sexRaw === 'f') && ageN != null && heightN != null && afN != null && weightN != null && weightN > 0;
+
   const mifflin: MifflinInput = {
-    sex,
-    age: num(goals.age) ?? 30,
-    heightCm: num(goals.height_cm) ?? 175,
-    activityFactor: num(goals.activity_factor) ?? 1.5,
-    weightKg: trendKg ?? num(goals.goal_weight_kg) ?? 0,
+    sex: sexRaw === 'f' ? 'f' : 'm',
+    age: ageN ?? 30,
+    heightCm: heightN ?? 175,
+    activityFactor: afN ?? 1.5,
+    weightKg: weightN ?? 0,
   };
 
   const tdee = adaptiveTdee({
@@ -194,8 +203,9 @@ async function energyCore(env: Env, refDateParam?: string): Promise<EnergyCore> 
     mifflin,
   });
 
-  // Si estamos en calibrating pero no hay peso ni goal_weight, no hay Mifflin fiable.
-  const tdeeKcal = tdee.status === 'calibrating' && mifflin.weightKg === 0 ? null : tdee.kcal;
+  // adaptive: el kcal viene del balance (no necesita Mifflin) → siempre válido.
+  // calibrating: kcal = Mifflin → válido SOLO si tenemos todos los inputs reales; si no, null.
+  const tdeeKcal = tdee.status === 'adaptive' ? tdee.kcal : hasMifflinInputs ? tdee.kcal : null;
 
   return {
     refDate, series, windowSeries, trendKg, emaFirst, emaLast, deltaWindow,
@@ -210,12 +220,14 @@ export async function energyStatus(env: Env): Promise<EnergyStatus> {
   const core = await energyCore(env);
 
   const rateTarget = num(goals.goal_rate_kg_per_week);
-  // rate_actual = ΔEMA por semana = ΔEMA / (window_days/7).
-  const rateActual = core.deltaWindow != null ? round1(core.deltaWindow / (WINDOW_DAYS / 7)) : null;
-  const onTrack = rateTarget != null && rateActual != null ? Math.abs(rateActual - rateTarget) <= 0.1 : false;
+  // rate_actual = ΔEMA por semana = ΔEMA / (window_days/7). on_track se evalúa SIN redondear
+  // (evita que ±0.05 de redondeo voltee el veredicto que decide ajustar calorías).
+  const rawRate = core.emaFirst != null && core.emaLast != null ? (core.emaLast - core.emaFirst) / (WINDOW_DAYS / 7) : null;
+  const rateActual = rawRate != null ? round2(rawRate) : null;
+  const onTrack = rateTarget != null && rawRate != null ? Math.abs(rawRate - rateTarget) <= 0.1 : false;
 
-  // adherence = días complete / ventana.
-  const adherence = round1(core.completeDaysUsed / WINDOW_DAYS);
+  // adherence = días complete / ventana (2 decimales, como el ejemplo 16/21 ≈ 0.76).
+  const adherence = round2(core.completeDaysUsed / WINDOW_DAYS);
 
   return {
     as_of_date: core.refDate,
@@ -275,7 +287,7 @@ export async function summaryToday(env: Env, date: string): Promise<SummaryToday
   const series = emaSeries(readings);
   const trendKg = emaAt(series, date);
   const ema7ago = emaAt(series, addDays(date, -7));
-  const delta7 = trendKg != null && ema7ago != null ? round1(trendKg - ema7ago) : null;
+  const delta7 = trendKg != null && ema7ago != null ? round2(trendKg - ema7ago) : null;
   const lastReading = readings.length ? readings[readings.length - 1]! : null;
 
   // TDEE anclado a la fecha.
@@ -304,7 +316,7 @@ export async function summaryToday(env: Env, date: string): Promise<SummaryToday
       fat_g: num(goals.target_fat_g),
     },
     precision: {
-      weighed_pct: items ? round1(weighed / items) : 0,
+      weighed_pct: items ? round2(weighed / items) : 0,
       items,
       low_confidence_items: lowConf,
     },

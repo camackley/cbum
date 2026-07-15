@@ -95,12 +95,16 @@ ok_flag=$(curl -s -H "$AUTH" -H "$CT" -X PUT "$BASE_URL/api/days/2026-07-14" -d 
 check "marca día completo" "$ok_flag" "true"
 
 echo "== GET /api/changes (cursor incremental) =="
+# El cursor lleva un margen de seguridad (~2s) que re-entrega writes muy recientes.
+# Dejamos envejecer los writes >3s para que queden por detrás del cursor tomado ahora.
+sleep 3
 C1=$(curl -s -H "$AUTH" "$BASE_URL/api/changes?since=0")
 CUR1=$(echo "$C1" | jq '.cursor')
 mc=$(echo "$C1" | jq '.meals | length')
 [[ "$mc" -ge 1 ]] && ok "changes since=0 trae meals ($mc)" || bad "changes since=0 sin meals"
-# nada nuevo desde el cursor actual
-sleep 1
+exc=$(echo "$C1" | jq '.exercises | length')
+check "changes since=0 trae el catálogo (28)" "$exc" "28"
+# nada nuevo desde el cursor actual (writes ya envejecidos > margen)
 C2=$(curl -s -H "$AUTH" "$BASE_URL/api/changes?since=$CUR1")
 mc2=$(echo "$C2" | jq '.meals | length')
 check "changes since=cursor → 0 meals" "$mc2" "0"

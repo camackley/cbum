@@ -16,8 +16,13 @@ export interface ChangesResult {
   day_flags: unknown[];
 }
 
+// Margen de seguridad: un write concurrente puede sellar updated_at justo antes del
+// cursor y commitear después de las lecturas → se perdería para siempre. Restar un
+// margen re-entrega una ventana pequeña en el siguiente pull (idempotente: iOS upsert por id).
+const CURSOR_SAFETY_MS = 2000;
+
 export async function getChanges(env: Env, since: number): Promise<ChangesResult> {
-  const cursor = now();
+  const cursor = Math.max(0, now() - CURSOR_SAFETY_MS);
 
   const mealsRaw = await env.DB.prepare(`SELECT * FROM meals WHERE updated_at > ?`).bind(since).all<Record<string, unknown>>();
   const meals = mealsRaw.results.map((m) => ({ ...m, per_100g: parseJson(m.per_100g as string | null, null) }));

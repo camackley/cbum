@@ -7,6 +7,12 @@ export function round1(x: number): number {
   return Math.round(x * 10) / 10;
 }
 
+// 2 decimales para porcentajes y tasas (contracts §3 usa 2 decimales: 0.76, −0.21, −0.31).
+// Suma 0 evita -0.
+export function round2(x: number): number {
+  return Math.round(x * 100) / 100 + 0;
+}
+
 // ── §5.1 Tendencia de peso (EMA) ────────────────────────────────────────────
 export interface WeightReading {
   date: string; // YYYY-MM-DD

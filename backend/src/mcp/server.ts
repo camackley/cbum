@@ -1,7 +1,11 @@
 import type { Context } from 'hono';
 import type { AppBindings } from '../types';
 import { ApiError } from '../lib/errors';
+import { timingSafeEqual } from '../lib/secure';
 import { TOOLS, TOOLS_BY_NAME } from './tools';
+
+// Versiones de protocolo MCP soportadas (para negociar en initialize).
+const SUPPORTED_PROTOCOLS = new Set(['2025-06-18', '2025-03-26', '2024-11-05']);
 
 // Servidor MCP remoto — JSON-RPC 2.0 stateless sobre Streamable HTTP (decisión en DECISIONS.md).
 // Montado en POST /mcp/:secret (contracts §2). Secret incorrecto → 404 sin filtrar info.
@@ -25,10 +29,14 @@ function rpcError(id: string | number | null | undefined, code: number, message:
 
 async function dispatch(c: Context<AppBindings>, req: JsonRpcRequest): Promise<unknown | null> {
   const { method, id, params } = req;
+  // JSON-RPC: una notificación no lleva `id` y NUNCA debe recibir respuesta.
+  const isNotification = id === undefined;
 
   switch (method) {
     case 'initialize': {
-      const protocolVersion = params?.protocolVersion ?? DEFAULT_PROTOCOL;
+      // Negociar: si el cliente pide una versión que soportamos, ecoarla; si no, la nuestra.
+      const requested = params?.protocolVersion;
+      const protocolVersion = typeof requested === 'string' && SUPPORTED_PROTOCOLS.has(requested) ? requested : DEFAULT_PROTOCOL;
       return rpcResult(id, {
         protocolVersion,
         capabilities: { tools: { listChanged: false } },
@@ -77,14 +85,15 @@ async function dispatch(c: Context<AppBindings>, req: JsonRpcRequest): Promise<u
     }
 
     default:
-      return rpcError(id, -32601, `Método no soportado: ${method}`);
+      // Notificación desconocida → sin respuesta. Request desconocido → error method-not-found.
+      return isNotification ? null : rpcError(id, -32601, `Método no soportado: ${method}`);
   }
 }
 
 export async function handleMcp(c: Context<AppBindings>): Promise<Response> {
   // 404 si el secret no coincide — sin filtrar información.
-  const secret = c.req.param('secret');
-  if (!c.env.MCP_SECRET || secret !== c.env.MCP_SECRET) {
+  const secret = c.req.param('secret') ?? '';
+  if (!c.env.MCP_SECRET || !timingSafeEqual(secret, c.env.MCP_SECRET)) {
     return c.json({ error: { code: 'not_found', message: 'Ruta no encontrada' } }, 404);
   }
 

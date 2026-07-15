@@ -69,7 +69,17 @@ export const mealInputSchema = z
   });
 export type MealInput = z.infer<typeof mealInputSchema>;
 
-export const mealsPostSchema = z.object({ meals: z.array(mealInputSchema).min(1) });
+// POST REST: exige id y meal_group_id en cada item (idempotencia por id + agrupación
+// correcta de la comida). El path MCP usa mealInputSchema directo tras generar ambos.
+export const mealsPostSchema = z
+  .object({ meals: z.array(mealInputSchema).min(1) })
+  .superRefine((body, ctx) => {
+    body.meals.forEach((m, i) => {
+      if (!m.id) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'id requerido (uuid del cliente)', path: ['meals', i, 'id'] });
+      if (!m.meal_group_id)
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'meal_group_id requerido', path: ['meals', i, 'meal_group_id'] });
+    });
+  });
 
 export const mealPatchSchema = z
   .object({
@@ -117,7 +127,9 @@ export const workoutInputSchema = z.object({
   date: zDate,
   program_day_id: z.string().nullish(),
   notes: z.string().nullish(),
-  sets: z.array(setInputSchema).default([]),
+  // Requerido (no default): omitir `sets` NO debe pasar como [] y disparar el borrado
+  // masivo de la reconciliación. Un array vacío explícito sí limpia los sets.
+  sets: z.array(setInputSchema),
 });
 export type WorkoutInput = z.infer<typeof workoutInputSchema>;
 export const workoutPostSchema = z.object({ workout: workoutInputSchema });
