@@ -98,7 +98,7 @@ Base: `https://<worker>.workers.dev`. Todos los bodies son JSON. Los POST son **
 | `GET /api/meals?from=YYYY-MM-DD&to=YYYY-MM-DD` | — | `{"meals":[Meal,...]}` (deleted=0) |
 | `PATCH /api/meals/:id` | `{"quantity_g":250}` u otros campos. Si viene `quantity_g` y hay `per_100g` → server recalcula macros = per_100g × quantity_g/100 | Meal actualizado |
 | `DELETE /api/meals/:id` | — | `{"ok":true}` (soft) |
-| `POST /api/workouts` | `{"workout":{...,"sets":[Set,...]}}` — server calcula `e1rm_kg` por set (§5.3) | Workout con sets y e1rm calculados |
+| `POST /api/workouts` | `{"workout":{...,"sets":[Set,...]}}` — server calcula `e1rm_kg` por set (§5.3). El set de sets del payload es **autoritativo**: sets del workout ausentes del payload se soft-borran (reconciliación de ediciones). | Workout con sets y e1rm calculados |
 | `GET /api/workouts?from&to&exercise_id` | — | `{"workouts":[{...,"sets":[...]},...]}` |
 | `DELETE /api/workouts/:id` | — | soft delete workout + sets |
 | `GET /api/exercises` | — | `{"exercises":[...]}` |

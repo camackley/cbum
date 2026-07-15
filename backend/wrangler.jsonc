@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cbum-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cbum-db",
+      // Reemplazar con el id real tras `wrangler d1 create cbum-db` (ver DECISIONS.md).
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+  // Secrets (NO van aquí, se setean con `wrangler secret put`):
+  //   API_TOKEN   — bearer para /api/*
+  //   MCP_SECRET  — segmento de URL para /mcp/:secret
+  //   FDC_API_KEY — USDA FoodData Central
+}
