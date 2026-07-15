@@ -25,10 +25,9 @@ struct MacroRings: View {
     var body: some View {
         VStack(spacing: CBSpace.s4) {
             ZStack {
+                // Solo el anillo de kcal (spec I1): 4 anillos concéntricos no dejan
+                // espacio legible para el número central. P/C/G viven en la leyenda.
                 ring(kcal, color: CB.bone, inset: 0)
-                ring(protein, color: CB.bone, inset: (ringWidth + gap) * 1)
-                ring(carbs, color: CB.gray300, inset: (ringWidth + gap) * 2)
-                ring(fat, color: CB.gray400, inset: (ringWidth + gap) * 3)
 
                 VStack(spacing: 0) {
                     Text("\(Int(kcal.consumed))")

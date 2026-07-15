@@ -8,30 +8,38 @@ struct TodayView: View {
     @State private var vm: TodayViewModel?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: CBSpace.s5) {
-                if let vm, let s = vm.summary {
-                    macrosSection(s)
-                    statsSection(s)
-                    sessionSection(s)
-                    dayCompleteToggle(vm, s)
-                    if vm.usingFallback { fallbackNote(vm) }
-                } else {
-                    ProgressView().tint(CB.bone).frame(maxWidth: .infinity).padding(.top, 80)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: CBSpace.s5) {
+                    Color.clear.frame(height: 0).id("cb.today.top")
+                    if let vm, let s = vm.summary {
+                        macrosSection(s)
+                        statsSection(s)
+                        sessionSection(s)
+                        dayCompleteToggle(vm, s)
+                        if vm.usingFallback { fallbackNote(vm) }
+                    } else {
+                        ProgressView().tint(CB.bone).frame(maxWidth: .infinity).padding(.top, 80)
+                    }
                 }
+                .padding(.horizontal, CBSpace.gutterScreen)
+                .padding(.bottom, CBSpace.s10)
             }
-            .padding(.horizontal, CBSpace.gutterScreen)
-            .padding(.bottom, CBSpace.s10)
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            CBHeader(title: "Hoy", eyebrow: CBDate.shortLabel())
-                .background(CB.bgApp)
-        }
-        .background(CB.bgApp)
-        .refreshable { await vm?.load() }
-        .task {
-            if vm == nil { vm = TodayViewModel(env: env) }
-            await vm?.load()
+            .safeAreaInset(edge: .top, spacing: 0) {
+                CBHeader(title: "Hoy", eyebrow: CBDate.shortLabel())
+                    .background(CB.bgApp)
+            }
+            .background(CB.bgApp)
+            .refreshable { await vm?.load() }
+            .task {
+                if vm == nil { vm = TodayViewModel(env: env) }
+                await vm?.load()
+            }
+            // Fix: al reemplazar el loader por el contenido async, el ScrollView
+            // quedaba con offset inicial que ocultaba los anillos. Anclar al top.
+            .onChange(of: vm?.summary != nil) { _, loaded in
+                if loaded { proxy.scrollTo("cb.today.top", anchor: .top) }
+            }
         }
     }
 

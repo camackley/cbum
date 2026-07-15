@@ -86,7 +86,9 @@ final class MockAPIClient: APIClient {
 
         // Comidas de hoy (mezcla pesado/etiqueta/estimado)
         let today = CBDate.day()
-        let g1 = UUID().uuidString, g2 = UUID().uuidString, g3 = UUID().uuidString
+        // IDs deterministas: el seed corre en cada launch; con UUID() aleatorios
+        // el upsert del sync duplicaba todo (bug: 7.320 kcal de avenas repetidas).
+        let g1 = "mock-group-\(today)-desayuno", g2 = "mock-group-\(today)-almuerzo", g3 = "mock-group-\(today)-cena"
         meals = [
             meal("Avena + whey + banano", today, g1, kcal: 520, p: 42, c: 68, f: 9, source: "label", conf: 0.95, basis: "weighed", h: 7),
             meal("Pollo + arroz + aguacate", today, g2, kcal: 642, p: 48, c: 71, f: 18, source: "barcode", conf: 0.9, basis: "weighed", h: 13),
@@ -97,7 +99,7 @@ final class MockAPIClient: APIClient {
             let d = cal.date(byAdding: .day, value: -i, to: Date()) ?? Date()
             let ds = CBDate.day(d)
             dayFlags[ds] = DayFlagDTO(date: ds, logging_complete: 1, updated_at: bump())
-            let gg = UUID().uuidString
+            let gg = "mock-group-\(ds)"
             meals.append(meal("Día \(ds)", ds, gg, kcal: 2500 + Double(Int.random(in: -120...120)),
                               p: 185, c: 250, f: 76, source: "manual", conf: 0.8, basis: "weighed", h: 20))
         }
@@ -130,20 +132,20 @@ final class MockAPIClient: APIClient {
         ExerciseDTO(id: id, name: n, muscle_group: mg, pattern: p, equipment: eq, increment_kg: inc, updated_at: bump(), deleted: 0)
     }
     private func bm(_ type: String, value: Double, date d: Date) -> BodyMetricDTO {
-        BodyMetricDTO(id: UUID().uuidString, ts: CBDate.ts(d), date: CBDate.day(d), type: type,
+        BodyMetricDTO(id: "mock-bm-\(type)-\(CBDate.day(d))", ts: CBDate.ts(d), date: CBDate.day(d), type: type,
                       value: value, source: "healthkit", updated_at: bump(), deleted: 0)
     }
     private func meal(_ name: String, _ date: String, _ group: String, kcal: Double, p: Double, c: Double, f: Double,
                       source: String, conf: Double, basis: String, h: Int, fdc: Int? = nil) -> MealDTO {
         let d = (CBDate.date(fromDay: date) ?? Date()).addingTimeInterval(Double(h) * 3600)
-        return MealDTO(id: UUID().uuidString, ts: CBDate.ts(d), date: date, meal_group_id: group, name: name,
+        return MealDTO(id: "mock-meal-\(date)-h\(h)", ts: CBDate.ts(d), date: date, meal_group_id: group, name: name,
                        quantity_g: basis == "weighed" ? 250 : nil, kcal: kcal, protein_g: p, carbs_g: c, fat_g: f,
                        fiber_g: 6, per_100g: nil, source: source, confidence: conf, portion_basis: basis,
                        fdc_id: fdc, off_id: nil, notes: nil, updated_at: bump(), deleted: 0)
     }
     private func makeSet(workoutId: String, ex: String, n: Int, w: Double, reps: Int, rir: Int) -> SetDTO {
         let e = FormulasKit.e1rm(weightKg: w, reps: reps, rir: rir, isWarmup: false)
-        return SetDTO(id: UUID().uuidString, workout_id: workoutId, exercise_id: ex, set_number: n,
+        return SetDTO(id: "mock-set-\(workoutId)-\(n)", workout_id: workoutId, exercise_id: ex, set_number: n,
                       weight_kg: w, reps: reps, rir: rir, is_warmup: 0, e1rm_kg: e, updated_at: bump(), deleted: 0)
     }
 

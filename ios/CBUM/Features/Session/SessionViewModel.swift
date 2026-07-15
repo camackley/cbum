@@ -84,8 +84,9 @@ final class SessionViewModel {
     /// "rest", si el programa cambió, y sin red. Aceptación I3 #2 (sesión intacta).
     private func resumeSession() {
         guard let w = workout else { return }
+        let wid = w.id   // #Predicate no soporta keypaths de objetos capturados (w.id)
         let sets = ((try? env.context.fetch(FetchDescriptor<WorkoutSet>(
-            predicate: #Predicate { $0.workoutId == w.id && $0.deleted == false }))) ?? [])
+            predicate: #Predicate { $0.workoutId == wid && $0.deleted == false }))) ?? [])
             .sorted { $0.setNumber < $1.setNumber }
         let prog = env.activeProgram()?.program
         let progDay = w.programDayId.flatMap { id in prog?.day(id: id) }
