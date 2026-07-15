@@ -1,0 +1,648 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CB0000000000000000000032 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* AppEnvironment.swift */; };
+		CB0000000000000000000033 /* CBUMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000002 /* CBUMApp.swift */; };
+		CB0000000000000000000034 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000003 /* RootView.swift */; };
+		CB0000000000000000000035 /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000004 /* Router.swift */; };
+		CB0000000000000000000036 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* Color+Hex.swift */; };
+		CB0000000000000000000037 /* ComponentGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000006 /* ComponentGallery.swift */; };
+		CB0000000000000000000038 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000007 /* Theme.swift */; };
+		CB0000000000000000000039 /* CBButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000008 /* CBButton.swift */; };
+		CB000000000000000000003A /* CBIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000009 /* CBIcon.swift */; };
+		CB000000000000000000003B /* CBTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000A /* CBTabBar.swift */; };
+		CB000000000000000000003C /* ExerciseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000B /* ExerciseCard.swift */; };
+		CB000000000000000000003D /* MacroRings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000C /* MacroRings.swift */; };
+		CB000000000000000000003E /* MealRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* MealRow.swift */; };
+		CB000000000000000000003F /* PRToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000E /* PRToast.swift */; };
+		CB0000000000000000000040 /* RIRSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000F /* RIRSelector.swift */; };
+		CB0000000000000000000041 /* RestTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000010 /* RestTimer.swift */; };
+		CB0000000000000000000042 /* SessionSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000011 /* SessionSummaryView.swift */; };
+		CB0000000000000000000043 /* SetLoggerRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* SetLoggerRow.swift */; };
+		CB0000000000000000000044 /* SourceBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000013 /* SourceBadge.swift */; };
+		CB0000000000000000000045 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000014 /* StatCard.swift */; };
+		CB0000000000000000000046 /* TrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000015 /* TrendChart.swift */; };
+		CB0000000000000000000047 /* VolumeBars.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000016 /* VolumeBars.swift */; };
+		CB0000000000000000000048 /* NutritionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000017 /* NutritionView.swift */; };
+		CB0000000000000000000049 /* WeeklyNutritionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000018 /* WeeklyNutritionSheet.swift */; };
+		CB000000000000000000004A /* ProgressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000019 /* ProgressScreen.swift */; };
+		CB000000000000000000004B /* ProgressViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000001A /* ProgressViewModel.swift */; };
+		CB000000000000000000004C /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000001B /* Haptics.swift */; };
+		CB000000000000000000004D /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000001C /* SessionView.swift */; };
+		CB000000000000000000004E /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000001D /* SessionViewModel.swift */; };
+		CB000000000000000000004F /* GoalsForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000001E /* GoalsForm.swift */; };
+		CB0000000000000000000050 /* ProgramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000001F /* ProgramView.swift */; };
+		CB0000000000000000000051 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000020 /* SettingsView.swift */; };
+		CB0000000000000000000052 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000021 /* TodayView.swift */; };
+		CB0000000000000000000053 /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000022 /* TodayViewModel.swift */; };
+		CB0000000000000000000054 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000023 /* Enums.swift */; };
+		CB0000000000000000000055 /* Macros.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000024 /* Macros.swift */; };
+		CB0000000000000000000056 /* Models+DTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000025 /* Models+DTO.swift */; };
+		CB0000000000000000000057 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000026 /* Models.swift */; };
+		CB0000000000000000000058 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000027 /* APIClient.swift */; };
+		CB0000000000000000000059 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000028 /* AppConfig.swift */; };
+		CB000000000000000000005A /* DTOs.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000029 /* DTOs.swift */; };
+		CB000000000000000000005B /* DateUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000002A /* DateUtils.swift */; };
+		CB000000000000000000005C /* FormulasKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000002B /* FormulasKit.swift */; };
+		CB000000000000000000005D /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000002C /* HealthKitService.swift */; };
+		CB000000000000000000005E /* MockAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000002D /* MockAPIClient.swift */; };
+		CB000000000000000000005F /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000002E /* SyncEngine.swift */; };
+		CB0000000000000000000060 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000031 /* Assets.xcassets */; };
+		CB0000000000000000000062 /* FormulasKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000061 /* FormulasKitTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CB0000000000000000000086 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CB0000000000000000000075 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CBFF00000000000000000001;
+			remoteInfo = CBUM;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		CB0000000000000000000001 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		CB0000000000000000000002 /* CBUMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBUMApp.swift; sourceTree = "<group>"; };
+		CB0000000000000000000003 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		CB0000000000000000000004 /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
+		CB0000000000000000000005 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color+Hex.swift; sourceTree = "<group>"; };
+		CB0000000000000000000006 /* ComponentGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentGallery.swift; sourceTree = "<group>"; };
+		CB0000000000000000000007 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		CB0000000000000000000008 /* CBButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBButton.swift; sourceTree = "<group>"; };
+		CB0000000000000000000009 /* CBIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBIcon.swift; sourceTree = "<group>"; };
+		CB000000000000000000000A /* CBTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBTabBar.swift; sourceTree = "<group>"; };
+		CB000000000000000000000B /* ExerciseCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseCard.swift; sourceTree = "<group>"; };
+		CB000000000000000000000C /* MacroRings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroRings.swift; sourceTree = "<group>"; };
+		CB000000000000000000000D /* MealRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealRow.swift; sourceTree = "<group>"; };
+		CB000000000000000000000E /* PRToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PRToast.swift; sourceTree = "<group>"; };
+		CB000000000000000000000F /* RIRSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RIRSelector.swift; sourceTree = "<group>"; };
+		CB0000000000000000000010 /* RestTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimer.swift; sourceTree = "<group>"; };
+		CB0000000000000000000011 /* SessionSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummaryView.swift; sourceTree = "<group>"; };
+		CB0000000000000000000012 /* SetLoggerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetLoggerRow.swift; sourceTree = "<group>"; };
+		CB0000000000000000000013 /* SourceBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceBadge.swift; sourceTree = "<group>"; };
+		CB0000000000000000000014 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
+		CB0000000000000000000015 /* TrendChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendChart.swift; sourceTree = "<group>"; };
+		CB0000000000000000000016 /* VolumeBars.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeBars.swift; sourceTree = "<group>"; };
+		CB0000000000000000000017 /* NutritionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionView.swift; sourceTree = "<group>"; };
+		CB0000000000000000000018 /* WeeklyNutritionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyNutritionSheet.swift; sourceTree = "<group>"; };
+		CB0000000000000000000019 /* ProgressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScreen.swift; sourceTree = "<group>"; };
+		CB000000000000000000001A /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
+		CB000000000000000000001B /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		CB000000000000000000001C /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
+		CB000000000000000000001D /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
+		CB000000000000000000001E /* GoalsForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsForm.swift; sourceTree = "<group>"; };
+		CB000000000000000000001F /* ProgramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramView.swift; sourceTree = "<group>"; };
+		CB0000000000000000000020 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CB0000000000000000000021 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		CB0000000000000000000022 /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
+		CB0000000000000000000023 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
+		CB0000000000000000000024 /* Macros.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Macros.swift; sourceTree = "<group>"; };
+		CB0000000000000000000025 /* Models+DTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models+DTO.swift; sourceTree = "<group>"; };
+		CB0000000000000000000026 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		CB0000000000000000000027 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		CB0000000000000000000028 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		CB0000000000000000000029 /* DTOs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DTOs.swift; sourceTree = "<group>"; };
+		CB000000000000000000002A /* DateUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateUtils.swift; sourceTree = "<group>"; };
+		CB000000000000000000002B /* FormulasKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulasKit.swift; sourceTree = "<group>"; };
+		CB000000000000000000002C /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
+		CB000000000000000000002D /* MockAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAPIClient.swift; sourceTree = "<group>"; };
+		CB000000000000000000002E /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		CB000000000000000000002F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CB0000000000000000000030 /* CBUM.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CBUM.entitlements; sourceTree = "<group>"; };
+		CB0000000000000000000031 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CB0000000000000000000061 /* FormulasKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulasKitTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000063 /* CBUM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBUM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CB0000000000000000000064 /* CBUMTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CBUMTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CB0000000000000000000078 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CB000000000000000000007A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CB0000000000000000000073 = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000065 /* CBUM */,
+				CB0000000000000000000072 /* CBUMTests */,
+				CB0000000000000000000074 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000074 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000063 /* CBUM.app */,
+				CB0000000000000000000064 /* CBUMTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000065 /* CBUM */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000071 /* App */,
+				CB0000000000000000000070 /* DesignSystem */,
+				CB0000000000000000000069 /* Features */,
+				CB0000000000000000000067 /* Models */,
+				CB0000000000000000000066 /* Resources */,
+				CB000000000000000000006E /* Services */,
+			);
+			path = CBUM;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000071 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000001 /* AppEnvironment.swift */,
+				CB0000000000000000000002 /* CBUMApp.swift */,
+				CB0000000000000000000003 /* RootView.swift */,
+				CB0000000000000000000004 /* Router.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000070 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				CB000000000000000000006F /* Components */,
+				CB0000000000000000000005 /* Color+Hex.swift */,
+				CB0000000000000000000006 /* ComponentGallery.swift */,
+				CB0000000000000000000007 /* Theme.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		CB000000000000000000006F /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000008 /* CBButton.swift */,
+				CB0000000000000000000009 /* CBIcon.swift */,
+				CB000000000000000000000A /* CBTabBar.swift */,
+				CB000000000000000000000B /* ExerciseCard.swift */,
+				CB000000000000000000000C /* MacroRings.swift */,
+				CB000000000000000000000D /* MealRow.swift */,
+				CB000000000000000000000E /* PRToast.swift */,
+				CB000000000000000000000F /* RIRSelector.swift */,
+				CB0000000000000000000010 /* RestTimer.swift */,
+				CB0000000000000000000011 /* SessionSummaryView.swift */,
+				CB0000000000000000000012 /* SetLoggerRow.swift */,
+				CB0000000000000000000013 /* SourceBadge.swift */,
+				CB0000000000000000000014 /* StatCard.swift */,
+				CB0000000000000000000015 /* TrendChart.swift */,
+				CB0000000000000000000016 /* VolumeBars.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000069 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				CB000000000000000000006C /* Nutrition */,
+				CB000000000000000000006D /* Progress */,
+				CB000000000000000000006A /* Session */,
+				CB0000000000000000000068 /* Settings */,
+				CB000000000000000000006B /* Today */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		CB000000000000000000006C /* Nutrition */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000017 /* NutritionView.swift */,
+				CB0000000000000000000018 /* WeeklyNutritionSheet.swift */,
+			);
+			path = Nutrition;
+			sourceTree = "<group>";
+		};
+		CB000000000000000000006D /* Progress */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000019 /* ProgressScreen.swift */,
+				CB000000000000000000001A /* ProgressViewModel.swift */,
+			);
+			path = Progress;
+			sourceTree = "<group>";
+		};
+		CB000000000000000000006A /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				CB000000000000000000001B /* Haptics.swift */,
+				CB000000000000000000001C /* SessionView.swift */,
+				CB000000000000000000001D /* SessionViewModel.swift */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000068 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				CB000000000000000000001E /* GoalsForm.swift */,
+				CB000000000000000000001F /* ProgramView.swift */,
+				CB0000000000000000000020 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		CB000000000000000000006B /* Today */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000021 /* TodayView.swift */,
+				CB0000000000000000000022 /* TodayViewModel.swift */,
+			);
+			path = Today;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000067 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000023 /* Enums.swift */,
+				CB0000000000000000000024 /* Macros.swift */,
+				CB0000000000000000000025 /* Models+DTO.swift */,
+				CB0000000000000000000026 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000066 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000031 /* Assets.xcassets */,
+				CB0000000000000000000030 /* CBUM.entitlements */,
+				CB000000000000000000002F /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		CB000000000000000000006E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000027 /* APIClient.swift */,
+				CB0000000000000000000028 /* AppConfig.swift */,
+				CB0000000000000000000029 /* DTOs.swift */,
+				CB000000000000000000002A /* DateUtils.swift */,
+				CB000000000000000000002B /* FormulasKit.swift */,
+				CB000000000000000000002C /* HealthKitService.swift */,
+				CB000000000000000000002D /* MockAPIClient.swift */,
+				CB000000000000000000002E /* SyncEngine.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		CB0000000000000000000072 /* CBUMTests */ = {
+			isa = PBXGroup;
+			children = (
+				CB0000000000000000000061 /* FormulasKitTests.swift */,
+			);
+			path = CBUMTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CBFF00000000000000000001 /* CBUM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB000000000000000000007D /* Build configuration list for PBXNativeTarget "CBUM" */;
+			buildPhases = (
+				CB0000000000000000000076 /* Sources */,
+				CB0000000000000000000078 /* Frameworks */,
+				CB0000000000000000000077 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CBUM;
+			productName = CBUM;
+			productReference = CB0000000000000000000063 /* CBUM.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CBFF00000000000000000002 /* CBUMTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB000000000000000000007E /* Build configuration list for PBXNativeTarget "CBUMTests" */;
+			buildPhases = (
+				CB0000000000000000000079 /* Sources */,
+				CB000000000000000000007A /* Frameworks */,
+				CB000000000000000000007B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CB0000000000000000000085 /* PBXTargetDependency */,
+			);
+			name = CBUMTests;
+			productName = CBUMTests;
+			productReference = CB0000000000000000000064 /* CBUMTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CB0000000000000000000075 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					CBFF00000000000000000001 = {CreatedOnToolsVersion = 16.0;};
+					CBFF00000000000000000002 = {CreatedOnToolsVersion = 16.0; TestTargetID = CBFF00000000000000000001;};
+				};
+			};
+			buildConfigurationList = CB000000000000000000007C /* Build configuration list for PBXProject "CBUM" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = es;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				es,
+				Base,
+			);
+			mainGroup = CB0000000000000000000073;
+			productRefGroup = CB0000000000000000000074 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CBFF00000000000000000001 /* CBUM */,
+				CBFF00000000000000000002 /* CBUMTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CB0000000000000000000077 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CB0000000000000000000060 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CB000000000000000000007B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CB0000000000000000000076 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CB0000000000000000000032 /* AppEnvironment.swift in Sources */,
+				CB0000000000000000000033 /* CBUMApp.swift in Sources */,
+				CB0000000000000000000034 /* RootView.swift in Sources */,
+				CB0000000000000000000035 /* Router.swift in Sources */,
+				CB0000000000000000000036 /* Color+Hex.swift in Sources */,
+				CB0000000000000000000037 /* ComponentGallery.swift in Sources */,
+				CB0000000000000000000038 /* Theme.swift in Sources */,
+				CB0000000000000000000039 /* CBButton.swift in Sources */,
+				CB000000000000000000003A /* CBIcon.swift in Sources */,
+				CB000000000000000000003B /* CBTabBar.swift in Sources */,
+				CB000000000000000000003C /* ExerciseCard.swift in Sources */,
+				CB000000000000000000003D /* MacroRings.swift in Sources */,
+				CB000000000000000000003E /* MealRow.swift in Sources */,
+				CB000000000000000000003F /* PRToast.swift in Sources */,
+				CB0000000000000000000040 /* RIRSelector.swift in Sources */,
+				CB0000000000000000000041 /* RestTimer.swift in Sources */,
+				CB0000000000000000000042 /* SessionSummaryView.swift in Sources */,
+				CB0000000000000000000043 /* SetLoggerRow.swift in Sources */,
+				CB0000000000000000000044 /* SourceBadge.swift in Sources */,
+				CB0000000000000000000045 /* StatCard.swift in Sources */,
+				CB0000000000000000000046 /* TrendChart.swift in Sources */,
+				CB0000000000000000000047 /* VolumeBars.swift in Sources */,
+				CB0000000000000000000048 /* NutritionView.swift in Sources */,
+				CB0000000000000000000049 /* WeeklyNutritionSheet.swift in Sources */,
+				CB000000000000000000004A /* ProgressScreen.swift in Sources */,
+				CB000000000000000000004B /* ProgressViewModel.swift in Sources */,
+				CB000000000000000000004C /* Haptics.swift in Sources */,
+				CB000000000000000000004D /* SessionView.swift in Sources */,
+				CB000000000000000000004E /* SessionViewModel.swift in Sources */,
+				CB000000000000000000004F /* GoalsForm.swift in Sources */,
+				CB0000000000000000000050 /* ProgramView.swift in Sources */,
+				CB0000000000000000000051 /* SettingsView.swift in Sources */,
+				CB0000000000000000000052 /* TodayView.swift in Sources */,
+				CB0000000000000000000053 /* TodayViewModel.swift in Sources */,
+				CB0000000000000000000054 /* Enums.swift in Sources */,
+				CB0000000000000000000055 /* Macros.swift in Sources */,
+				CB0000000000000000000056 /* Models+DTO.swift in Sources */,
+				CB0000000000000000000057 /* Models.swift in Sources */,
+				CB0000000000000000000058 /* APIClient.swift in Sources */,
+				CB0000000000000000000059 /* AppConfig.swift in Sources */,
+				CB000000000000000000005A /* DTOs.swift in Sources */,
+				CB000000000000000000005B /* DateUtils.swift in Sources */,
+				CB000000000000000000005C /* FormulasKit.swift in Sources */,
+				CB000000000000000000005D /* HealthKitService.swift in Sources */,
+				CB000000000000000000005E /* MockAPIClient.swift in Sources */,
+				CB000000000000000000005F /* SyncEngine.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CB0000000000000000000079 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CB0000000000000000000062 /* FormulasKitTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CB0000000000000000000085 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CBFF00000000000000000001 /* CBUM */;
+			targetProxy = CB0000000000000000000086 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CB000000000000000000007F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1 $(inherited)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CB0000000000000000000080 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = Release;
+		};
+		CB0000000000000000000081 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CBUM/Resources/CBUM.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CBUM/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mackley.cbum;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		CB0000000000000000000082 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CBUM/Resources/CBUM.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CBUM/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mackley.cbum;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		CB0000000000000000000083 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mackley.cbumTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBUM.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CBUM";
+			};
+			name = Debug;
+		};
+		CB0000000000000000000084 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mackley.cbumTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBUM.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CBUM";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CB000000000000000000007C /* Build configuration list for PBXProject "CBUM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB000000000000000000007F /* Debug */,
+				CB0000000000000000000080 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CB000000000000000000007D /* Build configuration list for PBXNativeTarget "CBUM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB0000000000000000000081 /* Debug */,
+				CB0000000000000000000082 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CB000000000000000000007E /* Build configuration list for PBXNativeTarget "CBUMTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB0000000000000000000083 /* Debug */,
+				CB0000000000000000000084 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CB0000000000000000000075 /* Project object */;
+}
