@@ -160,6 +160,45 @@ struct GoalsResponse: Codable { var goals: [String: String] }
 struct ProgramResponse: Codable { var program: ProgramDTO? }
 struct WorkoutResponse: Codable { var workout: WorkoutDTO? }
 
+// MARK: - §R2 recovery (V2)
+
+// Shape EXACTO de GET /api/recovery (delta §R2). Todos los campos numéricos son
+// nullables: `null` + status "no_data" cuando falta data (jamás inventar).
+struct Recovery: Codable {
+    struct Sleep: Codable {
+        var hours: Double?
+        var inbed_hours: Double?
+        var efficiency: Double?
+        var deep_hours: Double?
+        var rem_hours: Double?
+        var core_hours: Double?
+        var awake_hours: Double?
+        var midpoint_hour: Double?
+        var midpoint_drift_hours: Double?
+        var avg_7d_hours: Double?
+        var status: String       // below_need | ok | no_data
+    }
+    struct Rhr: Codable {
+        var today: Double?
+        var baseline_28d: Double?
+        var deviation_pct: Double?
+        var status: String       // elevated | normal | no_data
+    }
+    struct Hrv: Codable {
+        var today_ms: Double?
+        var baseline_28d_ms: Double?
+        var deviation_pct: Double?
+        var status: String       // suppressed | normal | no_data
+    }
+    var date: String
+    var sleep: Sleep
+    var rhr: Rhr
+    var hrv: Hrv
+    var recovery_state: String   // good | caution | low | no_data
+    var data_gaps: [String]
+    var basis: String
+}
+
 // MARK: - §3.1 summary/today
 
 struct SummaryToday: Codable {
@@ -169,6 +208,8 @@ struct SummaryToday: Codable {
     struct Weight: Codable { var trend_kg: Double?; var delta_7d_kg: Double?; var last_reading_kg: Double?; var last_reading_date: String? }
     struct TDEE: Codable { var kcal: Double; var status: String }
     struct Session: Codable { var program_day_id: String; var name: String; var exercise_count: Int; var completed_today: Bool }
+    // §R3 bloque aditivo: V1 ignora campos extra; nada existente cambia.
+    struct RecoveryBlock: Codable { var sleep_hours: Double?; var recovery_state: String? }
     var date: String
     var intake: Intake
     var targets: Targets
@@ -177,6 +218,7 @@ struct SummaryToday: Codable {
     var tdee: TDEE
     var session: Session?
     var logging_complete: Bool
+    var recovery: RecoveryBlock? = nil
 }
 
 // MARK: - §3.2 energy-status

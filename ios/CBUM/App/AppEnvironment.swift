@@ -217,15 +217,28 @@ final class AppEnvironment {
     }
 
     // MARK: - HealthKit → API
+    /// Progreso del backfill de historial (para Ajustes: "importando historial…").
+    var backfillInProgress = false
+
     func importFromHealthKit() {
         Task {
+            backfillInProgress = true
+            defer { backfillInProgress = false }
+            // Primer sync V2 → 90 días (los baselines 28d necesitan historia); luego 14.
+            let vitalDays = config.hkBackfilledV2 ? 14 : 90
             let weight = await health.readWeight()
             let totals = await health.readDailyTotals()
-            let sleep = await health.readSleep()
-            // Reconciliar ids con los locales por (type,ts,source): steps/sleep se
+            let sleep = config.hkImport("sleep") ? await health.readSleepPhases(days: vitalDays) : []
+            let vitals = await health.readDailyVitals(days: vitalDays,
+                                                      hrv: config.hkImport("hrv"),
+                                                      rhr: config.hkImport("rhr"),
+                                                      resp: config.hkImport("resp"))
+            let comp = config.hkImport("composition") ? await health.readBodyComposition() : []
+            // Reconciliar ids con los locales por (type,ts,source): los tipos por-día se
             // recomputan con UUID nuevo en cada import; reusar el id estable evita
             // que el pull posterior (que aplica por id) inserte un duplicado.
-            let all = (weight + totals + sleep).map { reconcileMetricId($0) }
+            let all = (weight + totals + sleep + vitals + comp).map { reconcileMetricId($0) }
+            config.hkBackfilledV2 = true
             guard !all.isEmpty else { return }
             for dto in all { upsertLocalMetric(dto) }
             try? context.save()

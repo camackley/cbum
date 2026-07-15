@@ -22,13 +22,15 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>CBUM lee tu peso, pasos, sueño y calorías activas de Apple Salud para calcular tu tendencia de peso y tu TDEE adaptativo con precisión.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>CBUM guarda en Apple Salud las comidas que registras y los entrenos que completas, para que tu historial de nutrición y actividad quede en un solo lugar.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
 		<string></string>
 	</dict>
-	<key>UIUserInterfaceStyle</key>
-	<string>Dark</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
@@ -42,9 +44,7 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>NSHealthShareUsageDescription</key>
-	<string>CBUM lee tu peso, pasos, sueño y calorías activas de Apple Salud para calcular tu tendencia de peso y tu TDEE adaptativo con precisión.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>CBUM guarda en Apple Salud las comidas que registras y los entrenos que completas, para que tu historial de nutrición y actividad quede en un solo lugar.</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 </dict>
 </plist>

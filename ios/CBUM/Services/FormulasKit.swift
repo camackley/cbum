@@ -171,6 +171,110 @@ enum FormulasKit {
         return c > prev
     }
 
+    // MARK: - V2 §R5 Recuperación (funciones PURAS; paridad EXACTA con backend formulas.ts)
+    // Baselines = mediana 28d propios (mín 14 datos). Reproducen los test vectors del delta.
+
+    static let sleepNeedDefaultHours = 7.0
+    static let baselineWindowDays = 28
+    static let baselineMinN = 14
+
+    /// Redondeo a 1 decimal (mismo `round1` del backend). `+ 0` evita -0.0.
+    static func round1(_ x: Double) -> Double { (x * 10).rounded() / 10 + 0 }
+
+    /// Mediana; nil si vacío. Par → promedio de los dos centrales.
+    static func median(_ values: [Double]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        let s = values.sorted()
+        let mid = s.count / 2
+        return s.count % 2 == 1 ? s[mid] : (s[mid - 1] + s[mid]) / 2
+    }
+
+    struct DatedValue { let date: String; let value: Double }   // date = YYYY-MM-DD
+    struct Baseline { let value: Double; let n: Int }
+
+    /// Mediana de los últimos 28 días CON dato, ventana terminando AYER (el valor de
+    /// hoy NO contamina su propio baseline). Mínimo 14 datos; si no → nil (§R5).
+    /// `endExclusive` = la fecha "hoy" que se evalúa.
+    static func baseline28(_ values: [DatedValue], endExclusive: String) -> Baseline? {
+        guard let start = addDays(to: endExclusive, days: -baselineWindowDays) else { return nil }
+        let inWindow = values.filter { $0.date >= start && $0.date < endExclusive }
+        guard inWindow.count >= baselineMinN else { return nil }
+        guard let m = median(inWindow.map { $0.value }) else { return nil }
+        return Baseline(value: m, n: inWindow.count)
+    }
+
+    /// deviation_pct = (hoy − baseline)/baseline × 100, redondeo 1 decimal (§R5).
+    static func deviationPct(today: Double, baseline: Double) -> Double {
+        guard baseline != 0 else { return 0 }
+        return round1((today - baseline) / baseline * 100)
+    }
+
+    enum RhrStatus: String { case elevated, normal, noData = "no_data" }
+    enum HrvStatus: String { case suppressed, normal, noData = "no_data" }
+    enum SleepStatus: String { case belowNeed = "below_need", ok, noData = "no_data" }
+    enum RecoveryState: String { case good, caution, low, noData = "no_data" }
+
+    /// RHR elevated si ≥ +3% (§R5).
+    static func rhrStatus(deviation: Double) -> RhrStatus { deviation >= 3 ? .elevated : .normal }
+    /// HRV suppressed si ≤ −15% (§R5).
+    static func hrvStatus(deviation: Double) -> HrvStatus { deviation <= -15 ? .suppressed : .normal }
+    /// Sleep below_need si hours < need (default 7.0h, configurable con goal sleep_need_hours).
+    static func sleepStatus(hours: Double, needHours: Double = sleepNeedDefaultHours) -> SleepStatus {
+        hours < needHours ? .belowNeed : .ok
+    }
+    /// midpoint_drift_hours = |midpoint hoy − mediana 28d de midpoints| (§R5).
+    static func midpointDrift(todayMidpoint: Double, baselineMidpoint: Double) -> Double {
+        round1(abs(todayMidpoint - baselineMidpoint))
+    }
+
+    struct RecoveryStateInput {
+        var sleepHours: Double?         // nil = sleep no_data
+        var rhrDeviationPct: Double?    // nil = rhr no_data
+        var rhrStatus: RhrStatus
+        var hrvDeviationPct: Double?    // nil = hrv no_data
+        var hrvStatus: HrvStatus
+        var midpointDriftHours: Double?
+    }
+
+    /// recovery_state: reglas EN ORDEN, gana la primera (§R5).
+    static func recoveryState(_ i: RecoveryStateInput) -> RecoveryState {
+        let sleepNoData = i.sleepHours == nil
+        let rhrNoData = i.rhrStatus == .noData
+        let hrvNoData = i.hrvStatus == .noData
+
+        // 1. no_data si sleep Y rhr Y hrv son no_data.
+        if sleepNoData && rhrNoData && hrvNoData { return .noData }
+
+        // 2. low si (sleep < 6.0h Y rhr elevated) O hrv ≤ −25% O rhr ≥ +7%.
+        let lowBySleepRhr = (i.sleepHours.map { $0 < 6.0 } ?? false) && i.rhrStatus == .elevated
+        let lowByHrv = i.hrvDeviationPct.map { $0 <= -25 } ?? false
+        let lowByRhr = i.rhrDeviationPct.map { $0 >= 7 } ?? false
+        if lowBySleepRhr || lowByHrv || lowByRhr { return .low }
+
+        // 3. caution si sleep < 7.0h O rhr elevated O hrv suppressed O midpoint_drift > 1.5h.
+        let cautionBySleep = i.sleepHours.map { $0 < 7.0 } ?? false
+        let cautionByDrift = i.midpointDriftHours.map { $0 > 1.5 } ?? false
+        if cautionBySleep || i.rhrStatus == .elevated || i.hrvStatus == .suppressed || cautionByDrift {
+            return .caution
+        }
+
+        // 4. good en cualquier otro caso.
+        return .good
+    }
+
+    /// Aritmética de días sobre "yyyy-MM-dd" anclada a UTC (paridad con `addDays` del
+    /// backend, que no hace math de timezone). Devuelve nil si el string no parsea.
+    static func addDays(to day: String, days: Int) -> String? {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let comps = day.split(separator: "-").compactMap { Int($0) }
+        guard comps.count == 3 else { return nil }
+        var dc = DateComponents(); dc.year = comps[0]; dc.month = comps[1]; dc.day = comps[2]
+        guard let base = cal.date(from: dc), let shifted = cal.date(byAdding: .day, value: days, to: base) else { return nil }
+        let out = cal.dateComponents([.year, .month, .day], from: shifted)
+        return String(format: "%04d-%02d-%02d", out.year ?? 0, out.month ?? 0, out.day ?? 0)
+    }
+
     // MARK: - §4 Schedule resolution
     /// Día del schedule que toca en `date`: schedule[(díasEntre(start, date)) % len].
     static func scheduledDayId(schedule: [String], startDate: Date, date: Date,

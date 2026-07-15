@@ -13,9 +13,9 @@ struct WeeklyNutritionSheet: View {
                 VStack(alignment: .leading, spacing: CBSpace.s4) {
                     let stats = compute()
                     HStack(spacing: CBSpace.s3) {
-                        StatCard(label: "Adherencia", value: "\(Int(stats.adherence * 100))", unit: "%",
+                        StatCard(label: "Adherencia", value: CBNumber.format((stats.adherence * 100).rounded(), decimals: 0), unit: "%",
                                  footnote: "días ±5% de kcal target")
-                        StatCard(label: "% Pesado", value: "\(Int(stats.weighedPct * 100))", unit: "%",
+                        StatCard(label: "% Pesado", value: CBNumber.format((stats.weighedPct * 100).rounded(), decimals: 0), unit: "%",
                                  footnote: "promedio 7 días")
                     }
                     ForEach(stats.days, id: \.date) { d in
@@ -27,7 +27,7 @@ struct WeeklyNutritionSheet: View {
                                     .foregroundStyle(d.complete ? CB.success : CB.estimated)
                             }
                             Spacer()
-                            Text("\(Int(d.kcal))").cbNumber(20, color: d.withinTarget ? CB.success : CB.textPrimary)
+                            Text(CBNumber.format(d.kcal, decimals: 0)).cbNumber(20, color: d.withinTarget ? CB.success : CB.textPrimary)
                             Text("kcal").font(CBFont.caption).foregroundStyle(CB.textTertiary)
                         }
                         .cbCard(padding: CBSpace.s3)

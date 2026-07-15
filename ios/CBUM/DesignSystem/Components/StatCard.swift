@@ -51,12 +51,18 @@ struct StatCard: View {
                 }
             }
 
+            // Bug 2 (I6): el valor grande no debe partirse en dos líneas ("+0.0"/"7").
+            // lineLimit(1) + minimumScaleFactor lo mantienen en una línea; el sufijo
+            // (unit) reserva su ancho como hermano fijo. Dígitos monoespaciados vía cbNumber.
             HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text(value)
                     .cbNumber(CBFont.Size.dataMD,
                               color: calibrating ? CB.textTertiary : (accent ? CB.bone : CB.textPrimary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 if let unit {
                     Text(unit).font(CBFont.bodySM).foregroundStyle(CB.textSecondary)
+                        .lineLimit(1).layoutPriority(1)
                 }
                 Spacer(minLength: 0)
             }
@@ -66,6 +72,7 @@ struct StatCard: View {
                     if let icon = delta.icon { CBIcon(name: icon, size: 14, color: delta.color) }
                     Text("\(delta.value)\(delta.period)")
                         .font(CBFont.bodySM).foregroundStyle(delta.color)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                 }
             }
             if let footnote {

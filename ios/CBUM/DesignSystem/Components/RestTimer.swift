@@ -11,7 +11,10 @@ struct RestTimer: View {
     var onSkip: () -> Void
 
     private var progress: Double {
-        duration > 0 ? Double(duration - remaining) / Double(duration) : 1
+        // Clamp 0...1: +30s puede dejar remaining > duration (progress negativo
+        // producía "Invalid frame dimension" en la barra compacta).
+        guard duration > 0 else { return 1 }
+        return min(1, max(0, Double(duration - remaining) / Double(duration)))
     }
     private var done: Bool { remaining <= 0 }
 

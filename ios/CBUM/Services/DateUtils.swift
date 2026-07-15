@@ -37,6 +37,16 @@ enum CBDate {
         return f.string(from: date).capitalized
     }
 
+    /// Etiqueta "14 jul" (es-CO) para lollipops de scrubbing (delta §R6).
+    static let dayMonthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "es_CO")
+        f.timeZone = bogota
+        f.dateFormat = "d MMM"
+        return f
+    }()
+    static func dayMonth(_ date: Date) -> String { dayMonthFormatter.string(from: date) }
+
     /// Hora "13:20".
     static func hour(fromTs ts: String) -> String {
         guard let d = date(fromTs: ts) else { return "" }

@@ -10,6 +10,7 @@ import SwiftUI
 @Observable
 final class TodayViewModel {
     var summary: SummaryToday?
+    var recovery: Recovery?
     var isLoading = false
     var usingFallback = false
     var lastKnownAt: Date?
@@ -32,6 +33,13 @@ final class TodayViewModel {
             usingFallback = true
             lastKnownAt = env.config.lastSyncAt
         }
+        // Recuperación (V2): full recovery para la columna DORMIR + chip; fallback local.
+        recovery = (try? await env.api.getRecovery(date: date)) ?? localRecovery()
+    }
+
+    /// Estado de recuperación para el chip: full recovery, o el bloque de summary, o no_data.
+    var recoveryState: String {
+        recovery?.recovery_state ?? summary?.recovery?.recovery_state ?? "no_data"
     }
 
     func toggleDayComplete(_ complete: Bool) {
@@ -89,6 +97,21 @@ final class TodayViewModel {
             predicate: #Predicate { $0.date == d && $0.finished == true && $0.deleted == false }))) ?? [])
             .contains { $0.programDayId == dayId }
         return .init(program_day_id: dayId, name: day.name, exercise_count: day.exercises.count, completed_today: done)
+    }
+
+    // Fallback local de recuperación: MISMO algoritmo (RecoveryCompute) sobre SwiftData.
+    private func localRecovery() -> Recovery {
+        let ctx = env.context
+        let today = date
+        let sleepNeed = Double(goalsDict()["sleep_need_hours"] ?? "") ?? FormulasKit.sleepNeedDefaultHours
+        return RecoveryCompute.build(date: today, needHours: sleepNeed) { type in
+            let t = type
+            let rows = ((try? ctx.fetch(FetchDescriptor<BodyMetric>(
+                predicate: #Predicate { $0.typeRaw == t && $0.deleted == false }))) ?? [])
+                .filter { $0.date <= today }
+                .sorted { ($0.date, $0.ts) < ($1.date, $1.ts) }
+            return rows.map { FormulasKit.DatedValue(date: $0.date, value: $0.value) }
+        }
     }
 
     private func goalsDict() -> [String: String] {

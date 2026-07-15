@@ -19,6 +19,14 @@ struct SettingsView: View {
     @State private var healthGranted = false
     @State private var testResult: String?
 
+    // HealthKit V2: toggles de importación por tipo + necesidad de sueño.
+    @State private var importSleep = true
+    @State private var importHRV = true
+    @State private var importRHR = true
+    @State private var importResp = true
+    @State private var importComp = true
+    @State private var sleepNeed = "7.0"
+
     var body: some View {
         VStack(spacing: 0) {
             CBHeader(title: "Ajustes")
@@ -42,6 +50,12 @@ struct SettingsView: View {
             token = env.config.apiToken
             useMock = env.config.useMockAPI
             healthGranted = env.health.writeAuthorized()
+            importSleep = env.config.hkImport("sleep")
+            importHRV = env.config.hkImport("hrv")
+            importRHR = env.config.hkImport("rhr")
+            importResp = env.config.hkImport("resp")
+            importComp = env.config.hkImport("composition")
+            sleepNeed = env.fetchGoal(key: "sleep_need_hours")?.value ?? "7.0"
         }
         .sheet(isPresented: $showGallery) { ComponentGallery() }
         .sheet(isPresented: $showGoals) { GoalsForm() }
@@ -131,9 +145,58 @@ struct SettingsView: View {
                     env.importFromHealthKit()
                 }
             }
-            Text("Lee peso, pasos, sueño y kcal activas; escribe comidas y entrenos.")
+            Text("Lee peso, pasos, sueño (con fases), HRV, FC reposo, respiración y composición; escribe comidas y entrenos.")
                 .font(CBFont.caption).foregroundStyle(CB.textTertiary)
+
+            Divider().overlay(CB.borderDefault)
+
+            // Backfill de 90 días (delta I5 §1).
+            HStack {
+                Text("Historial de Salud").font(CBFont.bodySM).foregroundStyle(CB.textSecondary)
+                Spacer()
+                if env.backfillInProgress {
+                    Text("importando historial de Salud…").font(CBFont.caption).foregroundStyle(CB.estimated)
+                } else {
+                    Text(env.config.hkBackfilledV2 ? "importado (90 días)" : "sin importar")
+                        .font(CBFont.caption).foregroundStyle(env.config.hkBackfilledV2 ? CB.success : CB.textTertiary)
+                }
+            }
+
+            // Toggles de importación por tipo (V2).
+            Text("Importar").cbLabel()
+            importToggle("Sueño con fases", "sleep", $importSleep)
+            importToggle("Variabilidad (HRV)", "hrv", $importHRV)
+            importToggle("FC en reposo", "rhr", $importRHR)
+            importToggle("Frecuencia respiratoria", "resp", $importResp)
+            importToggle("Composición (grasa/masa magra)", "composition", $importComp)
+
+            Divider().overlay(CB.borderDefault)
+
+            // Necesidad de sueño (default 7.0; el coach puede cambiarla).
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Necesidad de sueño (horas)").cbLabel()
+                HStack(spacing: CBSpace.s3) {
+                    TextField("7.0", text: $sleepNeed)
+                        .keyboardType(.decimalPad)
+                        .font(CBFont.mono(13)).foregroundStyle(CB.textPrimary)
+                        .padding(CBSpace.s3).background(CB.surfaceInput, in: RoundedRectangle(cornerRadius: CBRadius.sm))
+                        .frame(width: 90)
+                    CBButton(title: "Guardar", style: .secondary, size: .sm, fullWidth: false) {
+                        if let v = Double(sleepNeed.replacingOccurrences(of: ",", with: ".")), v > 0 {
+                            env.saveGoals(["sleep_need_hours": String(v)])
+                        }
+                    }
+                    Spacer()
+                }
+                Text("Default 7.0 — el coach puede cambiarla.").font(CBFont.caption).foregroundStyle(CB.textTertiary)
+            }
         }
+    }
+
+    private func importToggle(_ title: String, _ key: String, _ binding: Binding<Bool>) -> some View {
+        Toggle(isOn: Binding(get: { binding.wrappedValue }, set: { binding.wrappedValue = $0; env.config.setHkImport(key, $0) })) {
+            Text(title).font(CBFont.bodySM).foregroundStyle(CB.textPrimary)
+        }.tint(CB.bone)
     }
 
     // MARK: Data
@@ -158,7 +221,7 @@ struct SettingsView: View {
             HStack {
                 Text("Versión").font(CBFont.body).foregroundStyle(CB.textPrimary)
                 Spacer()
-                Text("1.0 (1)").font(CBFont.mono(12)).foregroundStyle(CB.textTertiary)
+                Text("1.1 (2)").font(CBFont.mono(12)).foregroundStyle(CB.textTertiary)
             }
             row("Design System (galería)") { showGallery = true }
         }

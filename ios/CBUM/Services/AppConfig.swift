@@ -31,6 +31,19 @@ final class AppConfig {
         set { d.set(newValue?.timeIntervalSince1970 ?? 0, forKey: "cbum.lastSyncAt") }
     }
 
+    /// V2: ¿ya se hizo el backfill inicial de 90 días de los tipos nuevos
+    /// (sueño con fases, HRV, RHR, respiración, composición)? Los baselines de 28d
+    /// necesitan historia, así que el primer import trae 90 días; luego 14.
+    var hkBackfilledV2: Bool {
+        get { d.bool(forKey: "cbum.hkBackfilledV2") }
+        set { d.set(newValue, forKey: "cbum.hkBackfilledV2") }
+    }
+
+    /// Toggles de importación por categoría V2 (Ajustes). Default true. HealthKit no
+    /// deja togglear permisos de LECTURA por API; esto controla qué importa la app.
+    func hkImport(_ key: String) -> Bool { d.object(forKey: "cbum.hkImport.\(key)") as? Bool ?? true }
+    func setHkImport(_ key: String, _ value: Bool) { d.set(value, forKey: "cbum.hkImport.\(key)") }
+
     // API token en Keychain
     private let tokenAccount = "cbum.apiToken"
 
